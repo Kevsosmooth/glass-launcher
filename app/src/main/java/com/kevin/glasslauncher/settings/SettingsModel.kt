@@ -10,18 +10,29 @@ import com.kevin.glasslauncher.data.Prefs
 import com.kevin.glasslauncher.data.Rotation
 import com.kevin.glasslauncher.glass.WallpaperCatalog
 import com.kevin.glasslauncher.home.buildHomeState
+import com.kevin.glasslauncher.system.NativePage
 
 const val LICENSE_NAME = "MIT"
 const val SOURCE_URL = "https://github.com/Kevsosmooth/glass-launcher"
 
 /** Pages of the Settings panel; Back from any of them returns to [Main]. */
-enum class SettingsPage { Main, Wallpaper, HiddenApps, MakeDefault }
+enum class SettingsPage { Main, Wallpaper, HiddenApps, MakeDefault, Wifi, Bluetooth, Sound, Display, Storage, About }
 
 enum class SettingId {
     Look, Wallpaper, Rotation, AppBackdrop, TopShelf, Clock,
     DockSize, HiddenApps, ResetDock, ConfirmResetDock,
+    Wifi, Bluetooth, Sound, Display, Storage, AboutDevice, AndroidSettings,
     MakeDefault, Hud, Version, License, Source,
 }
+
+/** Live values shown beside the Device rows; null shows no value. */
+data class DeviceSummary(
+    val wifi: UiText? = null,
+    val bluetooth: UiText? = null,
+    val sound: UiText? = null,
+    val display: UiText? = null,
+    val storage: UiText? = null,
+)
 
 /** Text that is either a string resource (with format args) or a literal. */
 sealed interface UiText {
@@ -60,6 +71,7 @@ sealed interface PrefChange {
 sealed interface SettingsAction {
     data class Change(val change: PrefChange) : SettingsAction
     data class Open(val page: SettingsPage) : SettingsAction
+    data class OpenNative(val page: NativePage) : SettingsAction
     data object ToggleResetConfirm : SettingsAction
     data object None : SettingsAction
 }
@@ -79,10 +91,17 @@ fun hideAllButDock(apps: List<AppEntry>, prefs: Prefs): Set<String> {
 }
 
 /** Rows of the main page, grouped. [debug] adds the Developer section. */
-fun settingsSections(prefs: Prefs, confirmingReset: Boolean, debug: Boolean, versionName: String): List<SettingsSection> =
+fun settingsSections(
+    prefs: Prefs,
+    confirmingReset: Boolean,
+    debug: Boolean,
+    versionName: String,
+    device: DeviceSummary = DeviceSummary(),
+): List<SettingsSection> =
     listOfNotNull(
         SettingsSection(R.string.panels_section_appearance, appearanceRows(prefs)),
         SettingsSection(R.string.panels_section_home, homeRows(prefs, confirmingReset)),
+        SettingsSection(R.string.system_section, deviceRows(device)),
         SettingsSection(
             R.string.panels_section_help,
             listOf(SettingsRow(SettingId.MakeDefault, R.string.panels_make_default, RowKind.Link(null))),
@@ -136,6 +155,16 @@ private fun homeRows(prefs: Prefs, confirmingReset: Boolean) = listOfNotNull(
     if (confirmingReset) SettingsRow(SettingId.ConfirmResetDock, R.string.panels_reset_dock_confirm, RowKind.Action) else null,
 )
 
+private fun deviceRows(device: DeviceSummary) = listOf(
+    SettingsRow(SettingId.Wifi, R.string.system_wifi, RowKind.Link(device.wifi)),
+    SettingsRow(SettingId.Bluetooth, R.string.system_bluetooth, RowKind.Link(device.bluetooth)),
+    SettingsRow(SettingId.Sound, R.string.system_sound, RowKind.Link(device.sound)),
+    SettingsRow(SettingId.Display, R.string.system_display, RowKind.Link(device.display)),
+    SettingsRow(SettingId.Storage, R.string.system_storage, RowKind.Link(device.storage)),
+    SettingsRow(SettingId.AboutDevice, R.string.system_about, RowKind.Link(null)),
+    SettingsRow(SettingId.AndroidSettings, R.string.system_android_settings, RowKind.Link(null)),
+)
+
 private fun lookText(look: Look) = UiText.Res(
     when (look) {
         Look.Glass -> R.string.panels_look_glass
@@ -163,6 +192,13 @@ fun onSelect(id: SettingId, prefs: Prefs): SettingsAction = when (id) {
     SettingId.HiddenApps -> SettingsAction.Open(SettingsPage.HiddenApps)
     SettingId.ResetDock -> SettingsAction.ToggleResetConfirm
     SettingId.ConfirmResetDock -> change(PrefChange.ResetDock)
+    SettingId.Wifi -> SettingsAction.Open(SettingsPage.Wifi)
+    SettingId.Bluetooth -> SettingsAction.Open(SettingsPage.Bluetooth)
+    SettingId.Sound -> SettingsAction.Open(SettingsPage.Sound)
+    SettingId.Display -> SettingsAction.Open(SettingsPage.Display)
+    SettingId.Storage -> SettingsAction.Open(SettingsPage.Storage)
+    SettingId.AboutDevice -> SettingsAction.Open(SettingsPage.About)
+    SettingId.AndroidSettings -> SettingsAction.OpenNative(NativePage.All)
     SettingId.MakeDefault -> SettingsAction.Open(SettingsPage.MakeDefault)
     SettingId.Hud -> change(PrefChange.SetHud(!prefs.hud))
     SettingId.Version, SettingId.License, SettingId.Source -> SettingsAction.None

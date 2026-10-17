@@ -33,6 +33,11 @@ Fire TV devices are secondary targets.
   Night, Mountains, Space), one left/right row per category. Sources and licences:
   [docs/wallpaper-credits.md](docs/wallpaper-credits.md).
 - Settings: look, wallpaper, background mode, dock size (4 to 6), hidden apps, 12/24-hour clock.
+- **Device pages** in the same glass style: Wi-Fi (connection, signal, band, nearby networks),
+  Bluetooth (paired devices), Sound (volume slider and mute, or your TV's volume over HDMI-CEC;
+  audio formats), Display (resolution, refresh rate, HDR, supported modes), Storage and About.
+  Android only lets apps read most of this, so joining networks, pairing and changing the
+  resolution open Android's own page, one row away.
 - Debug builds add a frame-time HUD for spotting jank by eye.
 
 ## Install
@@ -93,6 +98,9 @@ but the Home button still opens Fire TV's own launcher. `make-default.sh` explai
 
 Open Launcher Settings from Quick Controls. Look (Glass or Solid), wallpaper and wallpaper
 rotation, the focused-app backdrop, the top shelf, dock size, hidden apps and the 12/24-hour clock.
+The Device section lists Wi-Fi, Bluetooth, Sound, Display, Storage and About this TV with their
+current values, plus Android Settings. Wi-Fi network names need the location permission (Android's
+rule; Glass never reads your location) and Location turned on.
 
 ## Performance budgets
 

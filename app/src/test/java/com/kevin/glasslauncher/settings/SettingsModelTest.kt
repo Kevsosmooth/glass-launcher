@@ -5,6 +5,7 @@ import com.kevin.glasslauncher.apps.AppEntry
 import com.kevin.glasslauncher.data.Look
 import com.kevin.glasslauncher.data.Prefs
 import com.kevin.glasslauncher.data.Rotation
+import com.kevin.glasslauncher.system.NativePage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -51,6 +52,38 @@ class SettingsModelTest {
         assertEquals(SettingsAction.ToggleResetConfirm, onSelect(SettingId.ResetDock, prefs))
         assertEquals(SettingsAction.Change(PrefChange.ResetDock), onSelect(SettingId.ConfirmResetDock, prefs))
         assertEquals(SettingsAction.None, onSelect(SettingId.Source, prefs))
+    }
+
+    @Test
+    fun deviceRowsOpenOurPagesAndAndroidSettings() {
+        assertEquals(SettingsAction.Open(SettingsPage.Wifi), onSelect(SettingId.Wifi, prefs))
+        assertEquals(SettingsAction.Open(SettingsPage.Bluetooth), onSelect(SettingId.Bluetooth, prefs))
+        assertEquals(SettingsAction.Open(SettingsPage.Sound), onSelect(SettingId.Sound, prefs))
+        assertEquals(SettingsAction.Open(SettingsPage.Display), onSelect(SettingId.Display, prefs))
+        assertEquals(SettingsAction.Open(SettingsPage.Storage), onSelect(SettingId.Storage, prefs))
+        assertEquals(SettingsAction.Open(SettingsPage.About), onSelect(SettingId.AboutDevice, prefs))
+        assertEquals(SettingsAction.OpenNative(NativePage.All), onSelect(SettingId.AndroidSettings, prefs))
+    }
+
+    @Test
+    fun deviceSectionSitsBetweenHomeAndHelpWithLiveValues() {
+        val device = DeviceSummary(wifi = UiText.Raw("Home"), display = UiText.Raw("4K 60 Hz"))
+        val sections = settingsSections(prefs, false, debug = false, versionName = "1", device = device)
+        assertEquals(
+            listOf(R.string.panels_section_appearance, R.string.panels_section_home, R.string.system_section, R.string.panels_section_help),
+            sections.take(4).map { it.title },
+        )
+        val rows = sections[2].rows
+        assertEquals(
+            listOf(
+                SettingId.Wifi, SettingId.Bluetooth, SettingId.Sound, SettingId.Display,
+                SettingId.Storage, SettingId.AboutDevice, SettingId.AndroidSettings,
+            ),
+            rows.map { it.id },
+        )
+        assertEquals(RowKind.Link(UiText.Raw("Home")), rows.first { it.id == SettingId.Wifi }.kind)
+        assertEquals(RowKind.Link(UiText.Raw("4K 60 Hz")), rows.first { it.id == SettingId.Display }.kind)
+        assertEquals(RowKind.Link(null), rows.first { it.id == SettingId.Sound }.kind)
     }
 
     @Test

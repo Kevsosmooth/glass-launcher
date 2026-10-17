@@ -96,7 +96,11 @@ Look at the pictures, too: the checker proves geometry, not taste.
    focus returns to the tile it was opened from. (On the Shield, Menu sent by `input keyevent`
    never reaches apps; open the panel from the status pill or with `--es open controls`.)
 4. Settings: change Look, wallpaper, dock size, clock; each takes effect without a restart.
-5. Text on glass stays readable on every wallpaper.
+5. Device pages (`--es open wifi|bluetooth|sound|display|storage|about` on debug builds): values
+   match Android's own pages; on Sound, Left/Right on Volume changes the level (or the TV's
+   volume when HDMI-CEC owns it) and focus stays on the row; each last row opens Android's page
+   and Back returns to ours.
+6. Text on glass stays readable on every wallpaper.
 
 ## 5. Performance (release build)
 

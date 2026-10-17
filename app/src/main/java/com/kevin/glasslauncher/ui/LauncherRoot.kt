@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,6 +31,7 @@ import com.kevin.glasslauncher.glass.LocalGlass
 import com.kevin.glasslauncher.glass.WallpaperBackground
 import com.kevin.glasslauncher.home.FocusMemory
 import com.kevin.glasslauncher.home.HomeRoute
+import com.kevin.glasslauncher.settings.SettingsPage
 import com.kevin.glasslauncher.settings.SettingsScreen
 import kotlinx.coroutines.flow.Flow
 
@@ -39,8 +42,23 @@ enum class Overlay { Settings, QuickControls }
 class RootController {
     var overlay by mutableStateOf<Overlay?>(null)
 
+    /** The page Settings opens on; Quick Controls sets it for Wi-Fi, Display and Sound. */
+    var settingsPage by mutableStateOf(SettingsPage.Main)
+        private set
+
+    /** Bumped on every openSettings so asking for the same page again re-opens it. */
+    var settingsRequest by mutableIntStateOf(0)
+        private set
+
     fun toggle(target: Overlay) {
+        settingsPage = SettingsPage.Main
         overlay = if (overlay == target) null else target
+    }
+
+    fun openSettings(page: SettingsPage = SettingsPage.Main) {
+        settingsPage = page
+        settingsRequest++
+        overlay = Overlay.Settings
     }
 }
 
@@ -87,11 +105,13 @@ fun LauncherRoot(
                 HomeRoute(container, homeSignals, focusMemory, onLaunch, onOpenControls = { root.overlay = Overlay.QuickControls })
             }
             when (root.overlay) {
-                Overlay.Settings -> SettingsScreen(container, onClose = { root.overlay = null })
+                Overlay.Settings -> key(root.settingsRequest) {
+                    SettingsScreen(container, onClose = { root.overlay = null }, startPage = root.settingsPage)
+                }
                 Overlay.QuickControls -> QuickControlsPanel(
                     container,
                     onClose = { root.overlay = null },
-                    onOpenSettings = { root.overlay = Overlay.Settings },
+                    onOpenSettings = root::openSettings,
                 )
                 null -> Unit
             }

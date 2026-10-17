@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Device pages in Settings (Wi-Fi, Bluetooth, Sound, Display, Storage, About). -->
+<resources>
+    <string name="system_section">Device</string>
+    <string name="system_android_settings">Android Settings</string>
+
+    <!-- Wi-Fi -->
+    <string name="system_wifi">Wi-Fi</string>
+    <string name="system_wifi_connected">Connected</string>
+    <string name="system_wifi_not_connected">Not connected</string>
+    <string name="system_wifi_off">Wi-Fi is off</string>
+    <string name="system_ethernet">Ethernet</string>
+    <string name="system_wifi_this_network">Connected network</string>
+    <string name="system_wifi_signal">Signal</string>
+    <string name="system_wifi_signal_4">Excellent</string>
+    <string name="system_wifi_signal_3">Good</string>
+    <string name="system_wifi_signal_2">Fair</string>
+    <string name="system_wifi_signal_1">Weak</string>
+    <string name="system_wifi_signal_0">Very weak</string>
+    <string name="system_wifi_band">Band</string>
+    <string name="system_wifi_speed">Link speed</string>
+    <string name="system_wifi_speed_value">%1$d Mbps</string>
+    <string name="system_ip">IP address</string>
+    <string name="system_wifi_networks">Networks</string>
+    <string name="system_wifi_searching">Looking for networks…</string>
+    <string name="system_wifi_allow">Show network names</string>
+    <string name="system_wifi_allow_hint">Android only shares Wi-Fi names with apps that have location access. Glass never uses your location.</string>
+    <string name="system_wifi_location_off">Turn on Location to see networks</string>
+    <string name="system_wifi_secured">Secured</string>
+    <string name="system_wifi_open">Open</string>
+    <string name="system_wifi_manage">Join, forget or turn off Wi-Fi</string>
+
+    <!-- Bluetooth -->
+    <string name="system_bluetooth">Bluetooth</string>
+    <string name="system_bt_none">No Bluetooth on this TV</string>
+    <string name="system_bt_off">Bluetooth is off</string>
+    <string name="system_bt_allow">Show paired devices</string>
+    <string name="system_bt_paired">Paired devices</string>
+    <string name="system_bt_no_devices">No paired devices</string>
+    <string name="system_bt_count">%1$d paired</string>
+    <string name="system_bt_connected">Connected</string>
+    <string name="system_bt_not_connected">Not connected</string>
+    <string name="system_bt_pair">Pair a remote or accessory</string>
+    <string name="system_kind_remote">Remote</string>
+    <string name="system_kind_gamepad">Controller</string>
+    <string name="system_kind_keyboard">Keyboard</string>
+    <string name="system_kind_audio">Audio</string>
+    <string name="system_kind_other">Device</string>
+
+    <!-- Sound -->
+    <string name="system_sound">Sound</string>
+    <string name="system_volume">Volume</string>
+    <string name="system_volume_value">%1$d%%</string>
+    <string name="system_volume_fixed">Volume is controlled by your TV or receiver.</string>
+    <string name="system_mute">Mute</string>
+    <string name="system_muted">Muted</string>
+    <string name="system_volume_on_tv">On your TV</string>
+    <string name="system_mute_tv">Mute or unmute TV</string>
+    <string name="system_volume_tv_hint">Your TV controls the volume over HDMI. Left and Right here change it like the remote\'s volume keys.</string>
+    <string name="system_outputs">Audio output</string>
+    <string name="system_sound_more">Surround sound and audio output</string>
+
+    <!-- Display -->
+    <string name="system_display">Display</string>
+    <string name="system_resolution">Resolution</string>
+    <string name="system_refresh">Refresh rate</string>
+    <string name="system_hdr">HDR</string>
+    <string name="system_hdr_none">Not supported</string>
+    <string name="system_wide_color">Wide color</string>
+    <string name="system_yes">Yes</string>
+    <string name="system_no">No</string>
+    <string name="system_modes">Supported modes</string>
+    <string name="system_display_more">Change resolution and display</string>
+
+    <!-- Storage -->
+    <string name="system_storage">Storage</string>
+    <string name="system_storage_value">%1$s free of %2$s</string>
+    <string name="system_storage_free">%1$s free</string>
+    <string name="system_storage_more">Manage storage and apps</string>
+
+    <!-- About -->
+    <string name="system_about">About this TV</string>
+    <string name="system_about_name">Name</string>
+    <string name="system_about_model">Model</string>
+    <string name="system_about_android">Android</string>
+    <string name="system_about_patch">Security patch</string>
+    <string name="system_about_build">Build</string>
+    <string name="system_about_memory">Memory</string>
+    <string name="system_about_uptime">Up time</string>
+    <string name="system_about_timezone">Time zone</string>
+    <string name="system_date_time">Date and time</string>
+    <string name="system_language">Language</string>
+    <string name="system_update">System update</string>
+    <string name="system_about_more">More about this TV</string>
+    <string name="system_loading">Loading…</string>
+</resources>

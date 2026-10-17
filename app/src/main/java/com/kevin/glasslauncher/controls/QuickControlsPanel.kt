@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kevin.glasslauncher.AppContainer
 import com.kevin.glasslauncher.R
+import com.kevin.glasslauncher.settings.SettingsPage
 import com.kevin.glasslauncher.settings.ui.GlassPanel
 import com.kevin.glasslauncher.ui.TestTags
 import kotlinx.coroutines.Dispatchers
@@ -23,15 +24,16 @@ import kotlinx.coroutines.withContext
 
 /**
  * tvOS-style Control Center in a compact top-right panel: clock, Sleep, Sleep timer, Inputs, and
- * round buttons for Wi-Fi, Display, Sound, Android Settings and Launcher Settings. Focus starts on Sleep and
- * cannot leave the panel. Back from the inputs list returns here; top-level Back is LauncherRoot's.
+ * round buttons for Wi-Fi, Display, Sound (our Settings pages), Android Settings and Launcher
+ * Settings. Focus starts on Sleep and cannot leave the panel. Back from the inputs list returns
+ * here; top-level Back is LauncherRoot's.
  * Anything that fails to open shows a short message in the panel instead of crashing.
  */
 @Composable
 fun QuickControlsPanel(
     container: AppContainer,
     onClose: () -> Unit,
-    onOpenSettings: () -> Unit,
+    onOpenSettings: (SettingsPage) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -78,12 +80,12 @@ fun QuickControlsPanel(
                         container.scope.launch { setSleepTimer(context.applicationContext, container.prefs, minutes) }
                         if (minutes > 0 && !sleep.isAdmin) message = ControlsMessage.AdminNeeded
                     },
-                    onWifi = { open(Intent(Settings.ACTION_WIFI_SETTINGS)) },
+                    onWifi = { onOpenSettings(SettingsPage.Wifi) },
                     onInputs = { showInputs = true },
-                    onDisplay = { open(Intent(Settings.ACTION_DISPLAY_SETTINGS)) },
-                    onSound = { open(Intent(Settings.ACTION_SOUND_SETTINGS)) },
+                    onDisplay = { onOpenSettings(SettingsPage.Display) },
+                    onSound = { onOpenSettings(SettingsPage.Sound) },
                     onAndroidSettings = { open(Intent(Settings.ACTION_SETTINGS)) },
-                    onLauncherSettings = onOpenSettings,
+                    onLauncherSettings = { onOpenSettings(SettingsPage.Main) },
                 ),
             )
         }

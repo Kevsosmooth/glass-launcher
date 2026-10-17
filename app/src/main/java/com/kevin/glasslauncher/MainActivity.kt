@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import com.kevin.glasslauncher.apps.AppEntry
 import com.kevin.glasslauncher.debug.DebugTools
+import com.kevin.glasslauncher.settings.SettingsPage
 import com.kevin.glasslauncher.ui.LauncherRoot
 import com.kevin.glasslauncher.ui.Overlay
 import com.kevin.glasslauncher.ui.RootController
@@ -17,6 +18,16 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
 private const val EXTRA_OPEN = "open"
+
+/** `--es open wifi` etc. opens that Settings page (debug builds, for screenshots). */
+private val DEBUG_PAGES = mapOf(
+    "wifi" to SettingsPage.Wifi,
+    "bluetooth" to SettingsPage.Bluetooth,
+    "sound" to SettingsPage.Sound,
+    "display" to SettingsPage.Display,
+    "storage" to SettingsPage.Storage,
+    "about" to SettingsPage.About,
+)
 
 /**
  * HOME + LEANBACK_LAUNCHER activity (singleTask). Back and a repeated Home return to the top;
@@ -63,8 +74,9 @@ class MainActivity : ComponentActivity() {
         // Debug only: in a release build another app could pop a panel up over playback.
         if (!BuildConfig.DEBUG) return
         when (intent.getStringExtra(EXTRA_OPEN)) {
-            "settings" -> root.overlay = Overlay.Settings
+            "settings" -> root.openSettings()
             "controls" -> root.overlay = Overlay.QuickControls
+            else -> DEBUG_PAGES[intent.getStringExtra(EXTRA_OPEN)]?.let(root::openSettings)
         }
     }
 
