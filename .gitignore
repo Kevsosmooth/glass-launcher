@@ -1,0 +1,27 @@
+# Private agent files
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+HANDOFF.md
+
+# Build output
+.gradle/
+build/
+*/build/
+local.properties
+.idea/
+*.iml
+.kotlin/
+captures/
+shots/
+out/
+reports/
+__pycache__/
+
+# Per-machine tool settings
+tools/local.conf
+
+# Signing
+*.jks
+*.keystore
+keystore.properties

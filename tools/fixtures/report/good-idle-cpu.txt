@@ -1,0 +1,6 @@
+Tasks: 1 total
+  PID %CPU  RES NAME
+ 1234  0.0 61M com.kevin.glasslauncher
+Tasks: 1 total
+  PID %CPU  RES NAME
+ 1234  0.3 61M com.kevin.glasslauncher

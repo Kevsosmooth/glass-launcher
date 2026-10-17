@@ -1,0 +1,9 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 1 Realtime: 1
+
+** MEMINFO in pid 1234 [com.kevin.glasslauncher] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+  TOTAL    61440    50000     9000        0    90000    30000    20000    10000
+
+ TOTAL PSS:    61440            TOTAL RSS:    90000       TOTAL SWAP PSS:        0

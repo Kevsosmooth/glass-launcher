@@ -1,0 +1,15 @@
+
+Applications Graphics Acceleration Info:
+Uptime: 100 Realtime: 100
+
+** Graphics info for pid 1234 [com.kevin.glasslauncher] **
+
+Stats since: 5000000000ns
+Total frames rendered: 100
+Janky frames: 3 (0.60%)
+Janky frames (legacy): 3 (0.60%)
+50th percentile: 5ms
+90th percentile: 8ms
+95th percentile: 10ms
+99th percentile: 12ms
+Number Missing Vsync: 0

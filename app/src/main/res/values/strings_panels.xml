@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings owned by lane `panels`. -->
+<resources>
+    <string name="sleep_admin_description">Lets Quick Controls put the TV to sleep. It can only turn the screen off.</string>
+
+    <!-- Settings: main page -->
+    <string name="panels_settings_title">Settings</string>
+    <string name="panels_section_appearance">Appearance</string>
+    <string name="panels_section_home">Home</string>
+    <string name="panels_section_help">Help</string>
+    <string name="panels_section_developer">Developer</string>
+    <string name="panels_section_about">About</string>
+    <string name="panels_look">Look</string>
+    <string name="panels_look_glass">Glass</string>
+    <string name="panels_look_solid">Solid</string>
+    <string name="panels_wallpaper">Wallpaper</string>
+    <string name="panels_rotation">Change wallpaper</string>
+    <string name="panels_rotation_off">Off</string>
+    <string name="panels_rotation_hourly">Hourly</string>
+    <string name="panels_rotation_daily">Daily</string>
+    <string name="panels_app_backdrop">App backdrop</string>
+    <string name="panels_top_shelf">Top shelf</string>
+    <string name="panels_clock">Clock</string>
+    <string name="panels_clock_12">12-hour</string>
+    <string name="panels_clock_24">24-hour</string>
+    <string name="panels_dock_size">Dock size</string>
+    <string name="panels_hidden_apps">Hidden apps</string>
+    <string name="panels_hidden_none">None</string>
+    <string name="panels_hidden_count">%1$d hidden</string>
+    <string name="panels_reset_dock">Reset dock</string>
+    <string name="panels_reset_dock_confirm">Confirm: put the default apps back in the dock</string>
+    <string name="panels_make_default">Make Glass your home screen</string>
+    <string name="panels_hud">Performance HUD</string>
+    <string name="panels_version">Version</string>
+    <string name="panels_license">License</string>
+    <string name="panels_source">Source code</string>
+
+    <!-- Settings: sub-pages -->
+    <string name="panels_wallpaper_current">%1$s, current wallpaper</string>
+    <string name="panels_wallpaper_colors">Colors</string>
+    <string name="panels_wallpaper_nature">Nature</string>
+    <string name="panels_wallpaper_ocean">Ocean</string>
+    <string name="panels_wallpaper_night">Night</string>
+    <string name="panels_wallpaper_mountains">Mountains</string>
+    <string name="panels_wallpaper_space">Space</string>
+    <string name="panels_wallpaper_credit">Photo: %1$s</string>
+    <string name="panels_hidden_hint">Turn an app on to hide it from home. Turn it off to show it again.</string>
+    <string name="panels_hidden_dock_only">Show only dock apps</string>
+    <string name="panels_hidden_show_all">Show all apps</string>
+    <string name="panels_hidden_loading">Loading apps…</string>
+    <string name="panels_default_intro">Android TV only sends the Home button to its own launcher until you switch it off. Run these commands once from a computer with adb (the TV needs network debugging on).</string>
+    <string name="panels_default_google">Shield and Google TV: turn off the stock launcher.</string>
+    <string name="panels_default_google_cmd" translatable="false">adb shell pm disable-user --user 0 com.google.android.tvlauncher</string>
+    <string name="panels_default_undo">To undo and bring the stock launcher back:</string>
+    <string name="panels_default_undo_cmd" translatable="false">adb shell pm enable com.google.android.tvlauncher</string>
+    <string name="panels_default_projectivy">Projectivy: uninstall it from Settings, Apps (package com.spocky.projengmenu), then press Home and pick Glass.</string>
+    <string name="panels_default_fire">Fire TV: Fire OS ignores third-party launchers for the Home button. Open Glass from the apps row. A later version may add an accessibility option.</string>
+    <string name="panels_default_script">The project\'s tools/make-default.sh script runs these steps for you.</string>
+
+    <!-- Quick Controls -->
+    <string name="panels_sleep">Sleep</string>
+    <string name="panels_sleep_timer">Sleep timer</string>
+    <string name="panels_timer_off">Off</string>
+    <string name="panels_timer_left">%1$d min left</string>
+    <string name="panels_wifi">Wi-Fi</string>
+    <string name="panels_inputs">Inputs</string>
+    <string name="panels_inputs_count">%1$d inputs</string>
+    <string name="panels_display">Display</string>
+    <string name="panels_sound">Sound</string>
+    <string name="panels_android_settings">Android settings</string>
+    <string name="panels_launcher_settings">Launcher settings</string>
+    <string name="panels_cannot_open">This TV can\'t open that screen.</string>
+    <string name="panels_admin_needed">To let Glass put the TV to sleep, run this once from a computer with adb:</string>
+    <string name="panels_admin_cmd" translatable="false">adb shell dpm set-active-admin com.kevin.glasslauncher/.controls.SleepAdminReceiver</string>
+</resources>

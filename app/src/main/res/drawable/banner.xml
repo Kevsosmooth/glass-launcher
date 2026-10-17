@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 320x180 TV banner: frosted pane on the default wallpaper colours. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path android:fillColor="#FF0B1020" android:pathData="M0,0h320v180h-320z" />
+    <path android:fillColor="#FF2F6BFF" android:pathData="M0,0h160v90h-160z" />
+    <path android:fillColor="#FFFF5A8A" android:pathData="M160,0h160v90h-160z" />
+    <path android:fillColor="#FF19C6A8" android:pathData="M0,90h160v90h-160z" />
+    <path android:fillColor="#FF8A4DFF" android:pathData="M160,90h160v90h-160z" />
+    <path android:fillColor="#B3FFFFFF" android:pathData="M60,45h200a16,16 0,0 1,16 16v58a16,16 0,0 1,-16 16h-200a16,16 0,0 1,-16 -16v-58a16,16 0,0 1,16 -16z" />
+</vector>

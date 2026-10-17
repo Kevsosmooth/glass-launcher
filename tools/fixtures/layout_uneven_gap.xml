@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<!-- Gap between the third and fourth column is 100px, the others 60px. -->
+<hierarchy rotation="0">
+  <node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="com.kevin.glasslauncher" content-desc="" bounds="[0,0][1920,1080]">
+    <node index="0" text="" resource-id="status_pill" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[1600,20][1860,70]" />
+    <node index="0" text="" resource-id="grid_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[340,300][540,420]" />
+    <node index="0" text="" resource-id="grid_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[600,300][800,420]" />
+    <node index="0" text="" resource-id="grid_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[860,300][1060,420]" />
+    <node index="0" text="" resource-id="grid_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[1160,300][1360,420]" />
+    <node index="0" text="" resource-id="grid_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[1420,300][1620,420]" />
+    <node index="0" text="" resource-id="dock" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[300,890][1660,1070]" />
+    <node index="0" text="" resource-id="dock_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[340,920][540,1040]" />
+    <node index="0" text="" resource-id="dock_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[600,920][800,1040]" />
+    <node index="0" text="" resource-id="dock_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[860,920][1060,1040]" />
+    <node index="0" text="" resource-id="dock_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[1160,920][1360,1040]" />
+    <node index="0" text="" resource-id="dock_tile" class="android.view.View" package="com.kevin.glasslauncher" content-desc="" focusable="true" bounds="[1420,920][1620,1040]" />
+  </node>
+</hierarchy>

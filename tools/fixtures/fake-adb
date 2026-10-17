@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Stand-in for adb in tools/test_scripts.sh. Behaviour comes from environment variables:
+#   FAKE_TOP        package in front (default: whatever `am start` last opened, else
+#                   com.google.android.tvlauncher)
+#   FAKE_STUCK      1 = `am start` does not bring Glass to the front
+#   FAKE_STATE      directory holding `awake` (1 or 0, default 1); KEYCODE_WAKEUP sets it to 1 when
+#                   FAKE_WAKES=1
+#   FAKE_FEATURES   space-separated pm features (default: android.software.leanback)
+#   FAKE_PACKAGES   space-separated installed packages
+#   FAKE_DUMP       uiautomator XML returned for `pull /sdcard/gl-window.xml <dest>`
+#   FAKE_DUMP_BUSY  1 = `uiautomator dump` fails like it does on a screen that never goes idle
+#   FAKE_REPORT     directory with good-* gfxinfo/framestats/meminfo/idle-cpu dumps (tools/fixtures/report)
+#   FAKE_RELEASE    1 = the installed package is not debuggable
+#   FAKE_LOG        file that receives one line per call
+set -u
+echo "$*" >> "${FAKE_LOG:-/dev/null}"
+args=("$@")
+if [[ "${args[0]:-}" == "-s" ]]; then args=("${args[@]:2}"); fi
+cmd="${args[0]:-}"; shift_args=("${args[@]:1}")
+case "$cmd" in
+    connect) echo "connected to ${shift_args[0]:-}" ;;
+    pull)
+        [[ "${shift_args[0]}" == -q ]] && shift_args=("${shift_args[@]:1}")
+        case "${shift_args[0]}" in
+            /sdcard/gl-screen.png) printf 'PNG' > "${shift_args[1]}" ;;
+            /sdcard/gl-window.xml) cat "${FAKE_DUMP:?}" > "${shift_args[1]}" ;;
+        esac ;;
+    shell)
+        line="${shift_args[*]}"
+        case "$line" in
+            "dumpsys activity activities")
+                top=${FAKE_TOP:-$(cat "${FAKE_STATE:?}/top" 2>/dev/null || echo com.google.android.tvlauncher)}
+                echo "  mResumedActivity: ActivityRecord{1 u0 $top/.MainActivity t5}" ;;
+            "am start -W -n com.kevin.glasslauncher/"*) [[ "${FAKE_STUCK:-0}" == 1 ]] || echo com.kevin.glasslauncher > "${FAKE_STATE:?}/top" ;;
+            "dumpsys power")
+                if [[ "$(cat "${FAKE_STATE:?}/awake" 2>/dev/null || echo 1)" == 1 ]]; then echo "  mWakefulness=Awake"; else echo "  mWakefulness=Asleep"; fi ;;
+            "input keyevent KEYCODE_WAKEUP") [[ "${FAKE_WAKES:-0}" == 1 ]] && echo 1 > "${FAKE_STATE:?}/awake"; : ;;
+            "uiautomator dump"*)
+                if [[ "${FAKE_DUMP_BUSY:-0}" == 1 ]]; then echo "ERROR: could not get idle state."; else echo "UI hierchary dumped to: /sdcard/gl-window.xml"; fi ;;
+            "pm list features") for f in ${FAKE_FEATURES:-android.software.leanback}; do echo "feature:$f"; done ;;
+            "pm list packages"*) for p in ${FAKE_PACKAGES:-}; do echo "package:$p"; done ;;
+            "dumpsys gfxinfo com.kevin.glasslauncher framestats") cat "${FAKE_REPORT:?}/good-dock-framestats.txt" ;;
+            "dumpsys gfxinfo com.kevin.glasslauncher") cat "${FAKE_REPORT:?}/good-dock-gfxinfo.txt" ;;
+            "dumpsys meminfo com.kevin.glasslauncher") cat "${FAKE_REPORT:?}/good-meminfo.txt" ;;
+            "pidof com.kevin.glasslauncher") echo 1234 ;;
+            "top -b -n 2"*) cat "${FAKE_REPORT:?}/good-idle-cpu.txt" ;;
+            "dumpsys package com.kevin.glasslauncher")
+                if [[ "${FAKE_RELEASE:-0}" == 1 ]]; then echo "    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]"; else echo "    flags=[ DEBUGGABLE HAS_CODE ]"; fi ;;
+            "getprop ro.product.manufacturer") echo "${FAKE_MANUFACTURER:-NVIDIA}" ;;
+            "getprop ro.build.version.release") echo "${FAKE_ANDROID:-11}" ;;
+            *) ;;
+        esac ;;
+    *) ;;
+esac
+exit 0

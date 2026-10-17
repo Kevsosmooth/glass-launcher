@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings owned by lane `home`. -->
+<resources>
+    <string name="home_menu_move">Move</string>
+    <string name="home_menu_remove">Remove from dock</string>
+    <string name="home_menu_add">Add to dock</string>
+    <string name="home_menu_hide">Hide</string>
+    <string name="home_menu_info">App info</string>
+    <string name="home_menu_uninstall">Uninstall</string>
+    <string name="home_menu_dock_full">Dock full</string>
+    <string name="home_menu_in_dock">In dock</string>
+    <string name="home_no_system_page">This TV can\'t open that page</string>
+</resources>
