@@ -42,16 +42,24 @@ Fire TV devices are secondary targets.
 
 ## Install
 
-Requires Android TV or Google TV, Android 9 (API 28) or newer, and adb access to the TV
-(Settings, Device Preferences, About: tap Build seven times; then Developer options, Network
-debugging or USB debugging).
+Requires Android TV or Google TV, Android 9 (API 28) or newer.
 
-**From a release.** Once a signed build is published, download `app-release.apk` from the
-[Releases](../../releases) page, then:
+**On the TV, no computer needed.**
+
+1. Install **Downloader** by AFTVnews from the Play Store.
+2. Let it install apps: Settings, Device Preferences, Security & restrictions, Unknown sources,
+   Downloader (menu names vary a little between TVs).
+3. Open Downloader and enter the code **9798602**, or the full address
+   `https://github.com/Kevsosmooth/glass-launcher/releases/latest/download/glass-launcher.apk`.
+4. Install, then open Glass Launcher from your apps.
+
+The code always points to the newest release. One APK runs on every TV (ARM and x86).
+
+**With adb.** Download `glass-launcher.apk` from the [Releases](../../releases) page, then:
 
 ```
 adb connect <tv-ip>:5555
-adb -s <tv-ip>:5555 install -r app-release.apk
+adb -s <tv-ip>:5555 install -r glass-launcher.apk
 ```
 
 **From source.** Needs JDK 17 and the Android SDK:
