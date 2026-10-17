@@ -61,12 +61,11 @@ class MainActivity : ComponentActivity() {
         container.apps.refresh()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_MENU) {
-            root.toggle(Overlay.QuickControls)
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
+    // Before the views: Compose consumes Menu, so onKeyDown never sees it.
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode != KeyEvent.KEYCODE_MENU) return super.dispatchKeyEvent(event)
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) root.toggle(Overlay.QuickControls)
+        return true
     }
 
     private fun handleExtras(intent: Intent) {
