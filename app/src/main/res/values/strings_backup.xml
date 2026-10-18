@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings > Backup: export and import launcher settings as a JSON file. -->
+<resources>
+    <string name="backup_section">Backup</string>
+    <string name="backup_title">Backup</string>
+    <string name="backup_export">Export settings</string>
+    <string name="backup_import">Import settings</string>
+    <string name="backup_hint">Saves your look, wallpaper, dock and hidden apps to a file you can restore later or copy to another TV.</string>
+    <string name="backup_working">Working…</string>
+    <string name="backup_saved">Saved to %1$s</string>
+
+    <!-- Import confirm step -->
+    <string name="backup_confirm">Replace current settings?</string>
+    <string name="backup_confirm_detail">%1$d settings in this file, %2$d will be skipped.</string>
+    <string name="backup_confirm_yes">Yes, replace</string>
+    <string name="backup_confirm_cancel">Cancel</string>
+    <string name="backup_imported">Imported %1$d settings, skipped %2$d</string>
+
+    <!-- File list (TVs without a document picker) -->
+    <string name="backup_files_title">Choose a backup</string>
+    <string name="backup_files_none">No backups in Download/GlassLauncher yet. Export one first, or copy a backup file there.</string>
+    <string name="backup_files_allow">Show all backup files</string>
+    <string name="backup_files_allow_hint">Lets Glass list backups it did not save itself, such as files copied from another TV.</string>
+
+    <!-- Errors -->
+    <string name="backup_error_too_large">That file is too big to be a settings backup (64 KB at most).</string>
+    <string name="backup_error_malformed">That file is damaged or is not a settings backup.</string>
+    <string name="backup_error_wrong_format">That file is not a Glass Launcher settings backup.</string>
+    <string name="backup_error_newer">That backup was made by a newer Glass Launcher. Update the app, then try again.</string>
+    <string name="backup_error_no_settings">That backup has no settings Glass can use.</string>
+    <string name="backup_error_write">Could not save the backup. Check that the TV has free storage.</string>
+    <string name="backup_error_read">Could not read that file.</string>
+    <string name="backup_error_no_storage">This TV has no shared storage and no file picker, so backups cannot be saved or opened here.</string>
+    <string name="backup_error_permission">Glass needs storage access to save the backup in the Download folder.</string>
+</resources>

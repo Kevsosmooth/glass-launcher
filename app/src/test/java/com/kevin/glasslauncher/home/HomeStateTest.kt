@@ -1,6 +1,7 @@
 package com.kevin.glasslauncher.home
 
 import com.kevin.glasslauncher.apps.AppEntry
+import com.kevin.glasslauncher.data.AppOrder
 import com.kevin.glasslauncher.data.Look
 import com.kevin.glasslauncher.data.Prefs
 import org.junit.Assert.assertEquals
@@ -61,5 +62,27 @@ class HomeStateTest {
     @Test
     fun dockSizeComesFromPrefs() {
         assertEquals(4, buildHomeState(apps, defaults.copy(dockSize = 4)).dock.size)
+    }
+
+    @Test
+    fun mostUsedAppsFillTheDefaultDockAndDevBuildsSinkToTheEnd() {
+        val withDev = apps + AppEntry("z.app.dev", "z.Main", "Dev", true, isDev = true)
+        val usage = mapOf("g" to 900L, "b" to 500L, "z.app.dev" to 9_999L)
+        val s = buildHomeState(withDev, defaults, dockSize = 4, usage = usage)
+        assertEquals(listOf("g", "b", "a", "c"), s.dock.map { it.packageName })
+        assertEquals("z.app.dev", s.grid.last().packageName)
+    }
+
+    @Test
+    fun recentLaunchesRankAppsWhenUsageHistoryIsOff() {
+        val prefs = defaults.copy(favorites = emptyList(), recents = listOf("h/h.Main", "e/e.Main"))
+        assertEquals(listOf("h", "e", "a"), buildHomeState(apps, prefs).grid.take(3).map { it.packageName })
+    }
+
+    @Test
+    fun alphabeticalIgnoresUsage() {
+        val prefs = defaults.copy(favorites = emptyList(), appOrder = AppOrder.Alphabetical)
+        val s = buildHomeState(apps, prefs, usage = mapOf("h" to 100L))
+        assertEquals(apps.map { it.packageName }, s.grid.map { it.packageName })
     }
 }

@@ -1,5 +1,14 @@
 package com.kevin.glasslauncher.shelf
 
+import android.graphics.BitmapShader
+import android.graphics.Color as AndroidColor
+import android.graphics.ComposeShader
+import android.graphics.LinearGradient
+import android.graphics.Matrix
+import android.graphics.Paint as AndroidPaint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.graphics.Shader
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -10,22 +19,18 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import com.kevin.glasslauncher.apps.AppEntry
 import com.kevin.glasslauncher.apps.BannerCache
 import com.kevin.glasslauncher.apps.LargeArt
@@ -37,6 +42,7 @@ import kotlin.math.roundToInt
 
 // Dark enough that white text on top keeps its contrast over the brightest banner colours.
 private val Scrim = Color(0x99000000)
+private val ScrimFilter = PorterDuffColorFilter(Scrim.toArgb(), PorterDuff.Mode.SRC_ATOP)
 
 // The art is solid down to here, then fades to nothing at the bottom edge of the bounds.
 private const val FADE_START = 0.45f
@@ -80,37 +86,41 @@ fun AppBackdrop(app: AppEntry?, banners: BannerCache, underlay: BackdropUnderlay
 }
 
 /**
- * Both crossfade layers, darkened, fading out over the bottom of [size]. In its own layer so the
- * scrim (SrcAtop) and the fade mask (DstIn) only touch the art, not what is under it.
+ * Both crossfade layers, darkened, fading out over the bottom of [size]. Each layer is one shader
+ * pass (art masked by the fade, then the scrim as a colour filter) instead of an offscreen layer:
+ * a layer per frame, twice with glass on, is what weak TV GPUs (Fire TV) choke on.
  */
 private fun DrawScope.drawBackdrop(layers: CrossfadeLayers<LargeArt>, size: Size) {
-    val previous = layers.previous
-    val current = layers.current
-    if (previous == null && current == null) return
-    val area = Rect(Offset.Zero, size)
-    drawIntoCanvas { it.saveLayer(area, Paint()) }
-    previous?.let { drawCover(it.soft, layers.previousAlpha, size) }
-    current?.let { drawCover(it.soft, layers.currentAlpha, size) }
-    drawRect(Scrim, size = size, blendMode = BlendMode.SrcAtop)
-    val mask = Brush.verticalGradient(FADE_START to Color.Black, 1f to Color.Transparent, endY = size.height)
-    drawRect(mask, size = size, blendMode = BlendMode.DstIn)
-    drawIntoCanvas { it.restore() }
+    if (size.width <= 0f || size.height <= 0f) return
+    layers.previous?.let { drawCover(it.soft, layers.previousAlpha, size) }
+    layers.current?.let { drawCover(it.soft, layers.currentAlpha, size) }
 }
 
-/** Scales [image] to cover [size] (centre crop), like a full-bleed photo. */
+/** [image] scaled to cover [size] (centre crop), darkened by [Scrim] and faded out toward the bottom. */
 private fun DrawScope.drawCover(image: ImageBitmap, alpha: Float, size: Size) {
     if (alpha <= 0f) return
-    val scale = maxOf(size.width / image.width, size.height / image.height)
-    val srcW = (size.width / scale).roundToInt().coerceIn(1, image.width)
-    val srcH = (size.height / scale).roundToInt().coerceIn(1, image.height)
-    drawImage(
-        image,
-        srcOffset = IntOffset((image.width - srcW) / 2, (image.height - srcH) / 2),
-        srcSize = IntSize(srcW, srcH),
-        dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
-        alpha = alpha,
-        filterQuality = FilterQuality.Low,
+    val bitmap = image.asAndroidBitmap()
+    val scale = maxOf(size.width / bitmap.width, size.height / bitmap.height)
+    val art = BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+        setLocalMatrix(
+            Matrix().apply {
+                setScale(scale, scale)
+                postTranslate((size.width - bitmap.width * scale) / 2, (size.height - bitmap.height * scale) / 2)
+            },
+        )
+    }
+    val fade = LinearGradient(
+        0f, 0f, 0f, size.height,
+        intArrayOf(AndroidColor.BLACK, AndroidColor.BLACK, AndroidColor.TRANSPARENT),
+        floatArrayOf(0f, FADE_START, 1f),
+        Shader.TileMode.CLAMP,
     )
+    val paint = AndroidPaint(AndroidPaint.FILTER_BITMAP_FLAG).apply {
+        shader = ComposeShader(art, fade, PorterDuff.Mode.DST_IN)
+        colorFilter = ScrimFilter
+        this.alpha = (alpha * 255).roundToInt()
+    }
+    drawIntoCanvas { it.nativeCanvas.drawRect(0f, 0f, size.width, size.height, paint) }
 }
 
 /** Cached art at once; otherwise wait out quick focus skims before rendering. */

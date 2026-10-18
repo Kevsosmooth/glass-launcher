@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kevin.glasslauncher.AppContainer
 import com.kevin.glasslauncher.BuildConfig
+import com.kevin.glasslauncher.settings.backup.BackupPage
 import com.kevin.glasslauncher.settings.ui.GlassPanel
 import com.kevin.glasslauncher.settings.ui.SettingsPanelWidth
 import com.kevin.glasslauncher.ui.TestTags
@@ -91,12 +92,14 @@ fun SettingsScreen(
                 onShowAll = { apply(PrefChange.SetHidden(emptySet())) },
             )
             SettingsPage.MakeDefault -> MakeDefaultPage()
+            SettingsPage.HomeHelper -> HomeHelperPage()
             SettingsPage.Wifi -> WifiPage()
             SettingsPage.Bluetooth -> BluetoothPage()
             SettingsPage.Sound -> SoundPage()
             SettingsPage.Display -> DisplayPage()
             SettingsPage.Storage -> StoragePage()
             SettingsPage.About -> AboutPage()
+            SettingsPage.Backup -> BackupPage(current, container.prefs::restore, startOnImport = returnTo == SettingId.ImportSettings)
         }
     }
 }

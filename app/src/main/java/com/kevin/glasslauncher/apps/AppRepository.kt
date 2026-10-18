@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,11 @@ class AppRepository(private val context: Context, private val scope: CoroutineSc
     private val mutex = Mutex()
     private val _apps = MutableStateFlow<List<AppEntry>?>(null)
     val apps: StateFlow<List<AppEntry>?> = _apps.asStateFlow()
+    private val usageSource = UsageSource(context)
+    private val _usage = MutableStateFlow<Map<String, Long>>(emptyMap())
+
+    /** Screen time per package (last 60 days); empty without usage access. Read with every refresh. */
+    val usage: StateFlow<Map<String, Long>> = _usage.asStateFlow()
 
     /** Synthetic entries appended after the real apps (debug stress case). */
     @Volatile
@@ -50,6 +56,7 @@ class AppRepository(private val context: Context, private val scope: CoroutineSc
                 )
                 val only = onlyPackages
                 _apps.value = (if (only == null) real else real.filter { it.packageName in only }) + extraApps
+                _usage.value = usageSource.foregroundTime()
             }
         }
     }
@@ -57,7 +64,18 @@ class AppRepository(private val context: Context, private val scope: CoroutineSc
     private fun query(category: String, isLeanback: Boolean): List<AppEntry> =
         pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(category), 0).map { info ->
             val activity = info.activityInfo
-            AppEntry(activity.packageName, activity.name, info.loadLabel(pm).toString(), isLeanback)
+            val flags = activity.applicationInfo.flags
+            AppEntry(
+                activity.packageName,
+                activity.name,
+                info.loadLabel(pm).toString(),
+                isLeanback,
+                isDev = looksLikeDevBuild(
+                    activity.packageName,
+                    debuggable = flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
+                    testOnly = flags and ApplicationInfo.FLAG_TEST_ONLY != 0,
+                ),
+            )
         }
 
     /** Starts [app]; false if it is gone or refuses to start (caller shows a message). */

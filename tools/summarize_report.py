@@ -17,6 +17,8 @@ P50_BUDGET_MS = 8.0
 P99_BUDGET_MS = 16.7
 JANK_BUDGET_PCT = 1.0
 PSS_BUDGET_MB = 70.0
+DROPPED_BUDGET_PCT = 1.0
+IDLE_GAP_MS = 100.0
 IDLE_CPU_BUDGET_PCT = 1.0  # "~0%": anything under one percent of a core counts as idle
 
 
@@ -28,9 +30,15 @@ def percentile(sorted_values, pct):
     return sorted_values[rank - 1]
 
 
-def frame_times_ms(framestats_text):
-    """Per-frame time (IntendedVsync -> FrameCompleted) from `dumpsys gfxinfo <pkg> framestats`."""
-    times = []
+SKIPPED_FRAME = 0x8  # FrameInfo flag: nothing was drawn
+
+
+def frames(framestats_text, steady_only=True):
+    """(IntendedVsync, FrameCompleted) in ns per frame, in order, from `dumpsys gfxinfo <pkg> framestats`.
+
+    steady_only drops every flagged frame (layout pass, render-thread animation, skipped);
+    otherwise only skipped frames, which put nothing on screen, are dropped."""
+    out = []
     in_block, columns = False, None
     for line in framestats_text.splitlines():
         line = line.strip()
@@ -44,14 +52,36 @@ def frame_times_ms(framestats_text):
             columns = {name: i for i, name in enumerate(cells)}
             continue
         try:
-            if int(cells[columns["Flags"]]) != 0:  # flagged frames (layout pass, skipped) are not steady-state
+            flags = int(cells[columns["Flags"]])
+            if flags & SKIPPED_FRAME or (steady_only and flags):  # flagged frames are not steady-state
                 continue
             start, end = int(cells[columns["IntendedVsync"]]), int(cells[columns["FrameCompleted"]])
         except (KeyError, ValueError, IndexError):
             continue
         if end > start:
-            times.append((end - start) / 1e6)
-    return sorted(times)
+            out.append((start, end))
+    return out
+
+
+def frame_times_ms(framestats_text):
+    """Per-frame time (IntendedVsync -> FrameCompleted), ascending."""
+    return sorted((end - start) / 1e6 for start, end in frames(framestats_text))
+
+
+def dropped_pct(framestats_text):
+    """Vsyncs that got no frame while something was moving, as a % of all vsyncs in motion.
+
+    Frame time alone misleads on TVs whose compositor holds each frame for an extra vsync (Fire OS):
+    every frame looks 'slow' yet none is missed. A gap of n vsyncs between frames means n - 1 drops.
+    Gaps over IDLE_GAP_MS are pauses between key presses, not drops.
+    """
+    starts = [start for start, _ in frames(framestats_text, steady_only=False)]
+    gaps = [(b - a) / 1e6 for a, b in zip(starts, starts[1:]) if 0 < (b - a) / 1e6 <= IDLE_GAP_MS]
+    if not gaps:
+        return None
+    vsync = percentile(sorted(gaps), 10)
+    dropped = sum(max(0, round(g / vsync) - 1) for g in gaps)
+    return 100 * dropped / (len(gaps) + dropped)
 
 
 def gfxinfo_value(text, label):
@@ -106,13 +136,15 @@ def summarize(report_dir, name):
     phases = sorted(os.path.basename(p) for p in glob.glob(os.path.join(report_dir, f"{name}-*-framestats.txt")))
     for stats_file in phases:
         phase = stats_file[len(name) + 1:-len("-framestats.txt")]
-        times = frame_times_ms(read(os.path.join(report_dir, stats_file)))
+        text = read(os.path.join(report_dir, stats_file))
+        times = frame_times_ms(text)
         info_path = os.path.join(report_dir, f"{name}-{phase}-gfxinfo.txt")
         jank = janky_pct(read(info_path)) if os.path.exists(info_path) else None
         lines.append(f"| {phase}: frames measured | {len(times)} | | |")
         row(f"{phase}: frame time p50", percentile(times, 50), " ms", P50_BUDGET_MS)
         row(f"{phase}: frame time p99", percentile(times, 99), " ms", P99_BUDGET_MS)
         row(f"{phase}: janky frames", jank, "%", JANK_BUDGET_PCT, 2)
+        row(f"{phase}: dropped frames", dropped_pct(text), "%", DROPPED_BUDGET_PCT, 2)
 
     mem_path = os.path.join(report_dir, f"{name}-meminfo.txt")
     row("Idle RAM (PSS)", pss_mb(read(mem_path)) if os.path.exists(mem_path) else None, " MB", PSS_BUDGET_MB)
@@ -120,6 +152,8 @@ def summarize(report_dir, name):
     row("Idle CPU", idle_cpu_pct(read(cpu_path)) if os.path.exists(cpu_path) else None, "%", IDLE_CPU_BUDGET_PCT)
 
     lines += ["", "Frame times come from framestats (IntendedVsync to FrameCompleted); janky % is gfxinfo's own count.",
+              "Dropped frames are vsyncs with no new frame while moving: the smoothness you see. Fire OS inflates",
+              "frame time and janky % (its compositor holds each frame an extra vsync), so judge Fire TV by dropped.",
               "Budgets: spec 2026-10-17-glass-launcher-design.md, 'Performance and feel'.", ""]
     return "\n".join(lines), misses
 

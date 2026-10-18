@@ -12,6 +12,7 @@ suspend fun PrefChange.applyTo(prefs: LauncherPrefs) {
         is PrefChange.SetClock24 -> prefs.setClock24(on)
         is PrefChange.SetDockSize -> prefs.setDockSize(size)
         is PrefChange.SetHud -> prefs.setHud(on)
+        is PrefChange.SetAppOrder -> prefs.setAppOrder(order)
         is PrefChange.SetWallpaper -> prefs.setWallpaper(id)
         is PrefChange.SetHidden -> prefs.setHidden(keys)
         PrefChange.ResetDock -> prefs.resetFavorites()

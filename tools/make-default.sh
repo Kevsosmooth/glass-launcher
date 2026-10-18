@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Make Glass Launcher the Home screen on an Android TV / Google TV by disabling the stock launcher
-# (reversible). Dry run unless --apply. Fire TV cannot replace Home: the script says so and exits 0.
+# (reversible). Dry run unless --apply. Fire TV cannot replace Home: the script points to
+# tools/home-helper.sh and exits 0.
 #
 # Usage: DEVICE=<ip:port> tools/make-default.sh [-d <ip:port>] [--apply | --undo] [--remove-projectivy]
 #   (no flag)            dry run: print what --apply would do, change nothing
@@ -35,7 +36,8 @@ is_fire_tv() {
 
 if is_fire_tv; then
     echo "This is a Fire TV. Fire OS does not let apps replace the Home screen, and its launcher"
-    echo "cannot be disabled without root, so Glass Launcher can only be opened as a normal app here."
+    echo "cannot be disabled without root. To make the Home button open Glass, turn on its Home button"
+    echo "helper: tools/home-helper.sh --apply (or Glass Settings > Home button helper)."
     exit 0
 fi
 gl_has_leanback \

@@ -100,7 +100,12 @@ Look at the pictures, too: the checker proves geometry, not taste.
    match Android's own pages; on Sound, Left/Right on Volume changes the level (or the TV's
    volume when HDMI-CEC owns it) and focus stays on the row; each last row opens Android's page
    and Back returns to ours.
-6. Text on glass stays readable on every wallpaper.
+6. Backup (`--es open backup` on debug builds): Export settings shows "Saved to ..." with the
+   path; change a few settings, then Import settings, pick that file, choose Yes on "Replace
+   current settings?" and check every setting comes back and the message reads "Imported N
+   settings, skipped 0". On a TV without a file picker, Import lists `Download/GlassLauncher`
+   and Back returns to the Backup page. A file that is not a backup shows a clear error.
+7. Text on glass stays readable on every wallpaper.
 
 ## 5. Performance (release build)
 

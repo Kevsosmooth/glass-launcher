@@ -2,6 +2,7 @@ package com.kevin.glasslauncher.settings
 
 import com.kevin.glasslauncher.R
 import com.kevin.glasslauncher.apps.AppEntry
+import com.kevin.glasslauncher.data.AppOrder
 import com.kevin.glasslauncher.data.Look
 import com.kevin.glasslauncher.data.Prefs
 import com.kevin.glasslauncher.data.Rotation
@@ -35,6 +36,7 @@ class SettingsModelTest {
         assertEquals(SettingsAction.Change(PrefChange.SetDockSize(4)), onSelect(SettingId.DockSize, prefs.copy(dockSize = 6)))
         assertEquals(SettingsAction.Change(PrefChange.SetDockSize(5)), onSelect(SettingId.DockSize, prefs.copy(dockSize = 4)))
         assertEquals(SettingsAction.Change(PrefChange.SetClock24(true)), onSelect(SettingId.Clock, prefs))
+        assertEquals(SettingsAction.Change(PrefChange.SetAppOrder(AppOrder.Alphabetical)), onSelect(SettingId.AppOrder, prefs))
     }
 
     @Test
@@ -49,6 +51,7 @@ class SettingsModelTest {
         assertEquals(SettingsAction.Open(SettingsPage.Wallpaper), onSelect(SettingId.Wallpaper, prefs))
         assertEquals(SettingsAction.Open(SettingsPage.HiddenApps), onSelect(SettingId.HiddenApps, prefs))
         assertEquals(SettingsAction.Open(SettingsPage.MakeDefault), onSelect(SettingId.MakeDefault, prefs))
+        assertEquals(SettingsAction.Open(SettingsPage.HomeHelper), onSelect(SettingId.HomeHelper, prefs))
         assertEquals(SettingsAction.ToggleResetConfirm, onSelect(SettingId.ResetDock, prefs))
         assertEquals(SettingsAction.Change(PrefChange.ResetDock), onSelect(SettingId.ConfirmResetDock, prefs))
         assertEquals(SettingsAction.None, onSelect(SettingId.Source, prefs))
@@ -66,12 +69,12 @@ class SettingsModelTest {
     }
 
     @Test
-    fun deviceSectionSitsBetweenHomeAndHelpWithLiveValues() {
+    fun deviceSectionFollowsHomeWithLiveValues() {
         val device = DeviceSummary(wifi = UiText.Raw("Home"), display = UiText.Raw("4K 60 Hz"))
         val sections = settingsSections(prefs, false, debug = false, versionName = "1", device = device)
         assertEquals(
-            listOf(R.string.panels_section_appearance, R.string.panels_section_home, R.string.system_section, R.string.panels_section_help),
-            sections.take(4).map { it.title },
+            listOf(R.string.panels_section_appearance, R.string.panels_section_home, R.string.system_section),
+            sections.take(3).map { it.title },
         )
         val rows = sections[2].rows
         assertEquals(
@@ -84,6 +87,24 @@ class SettingsModelTest {
         assertEquals(RowKind.Link(UiText.Raw("Home")), rows.first { it.id == SettingId.Wifi }.kind)
         assertEquals(RowKind.Link(UiText.Raw("4K 60 Hz")), rows.first { it.id == SettingId.Display }.kind)
         assertEquals(RowKind.Link(null), rows.first { it.id == SettingId.Sound }.kind)
+    }
+
+    @Test
+    fun backupSectionSitsAfterDeviceAndBeforeHelp() {
+        val sections = settingsSections(prefs, false, debug = false, versionName = "1")
+        val titles = sections.map { it.title }
+        assertEquals(titles.indexOf(R.string.system_section) + 1, titles.indexOf(R.string.backup_section))
+        assertEquals(titles.indexOf(R.string.backup_section) + 1, titles.indexOf(R.string.panels_section_help))
+        val rows = sections.first { it.title == R.string.backup_section }.rows
+        assertEquals(listOf(SettingId.ExportSettings, SettingId.ImportSettings), rows.map { it.id })
+        assertEquals(listOf(R.string.backup_export, R.string.backup_import), rows.map { it.title })
+        assertTrue(rows.all { it.kind == RowKind.Link(null) })
+    }
+
+    @Test
+    fun backupRowsOpenTheBackupPage() {
+        assertEquals(SettingsAction.Open(SettingsPage.Backup), onSelect(SettingId.ExportSettings, prefs))
+        assertEquals(SettingsAction.Open(SettingsPage.Backup), onSelect(SettingId.ImportSettings, prefs))
     }
 
     @Test

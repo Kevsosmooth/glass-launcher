@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
@@ -8,6 +9,10 @@
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <uses-feature android:name="android.hardware.location.network" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
+    <!-- App order "Most used": screen time per app. Only the user can grant it (Usage access);
+         without it Glass ranks by its own recent launches. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
 
     <!-- Edit mode "Uninstall" (ACTION_DELETE). -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
@@ -24,7 +29,27 @@
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
+    <!-- Settings > Backup on TVs without a file picker. Android 9 only: save the backup in
+         Download/GlassLauncher (Android 10+ uses MediaStore, which needs no permission). -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <!-- Settings > Backup: list backups in Download/GlassLauncher that this install did not write
+         (an older install, a copied file). Asked for only from the backup list; Android 13+ ignores it. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
     <queries>
+        <!-- Settings > Backup: find out whether this TV has a document picker to save or open a file. -->
+        <intent>
+            <action android:name="android.intent.action.CREATE_DOCUMENT" />
+            <data android:mimeType="application/json" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.OPEN_DOCUMENT" />
+            <data android:mimeType="*/*" />
+        </intent>
+        <!-- Home button helper: see whether Accessibility settings is real or the TV's stub. -->
+        <intent>
+            <action android:name="android.settings.ACCESSIBILITY_SETTINGS" />
+        </intent>
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
@@ -81,5 +106,20 @@
         <receiver
             android:name=".controls.SleepTimerReceiver"
             android:exported="false" />
+
+        <!-- Home button helper for TVs that keep their own home screen (Fire TV). Off until the
+             user turns it on under Accessibility; only the system can bind it. -->
+        <service
+            android:name=".homebutton.HomeButtonService"
+            android:exported="true"
+            android:label="@string/home_helper_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/home_button_service" />
+        </service>
     </application>
 </manifest>

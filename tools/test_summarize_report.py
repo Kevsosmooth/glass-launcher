@@ -27,6 +27,22 @@ class Parsers(unittest.TestCase):
         self.assertEqual(sr.percentile(times, 50), 5.0)
         self.assertEqual(sr.percentile(times, 99), 12.0)
 
+    def test_dropped_counts_missing_vsyncs_but_not_pauses(self):
+        def stats(starts_ms, flags=None):
+            head = "---PROFILEDATA---\nFlags,IntendedVsync,FrameCompleted,\n"
+            rows = "".join(f"{(flags or {}).get(i, 0)},{int(t * 1e6)},{int((t + 5) * 1e6)},\n" for i, t in enumerate(starts_ms))
+            return head + rows + "---PROFILEDATA---\n"
+        v = 16.7
+        steady = [i * v for i in range(10)]
+        self.assertEqual(sr.dropped_pct(stats(steady)), 0.0)
+        # One 2-vsync gap: 1 dropped of 10 vsyncs in motion.
+        self.assertAlmostEqual(sr.dropped_pct(stats(steady[:5] + [t + v for t in steady[5:]])), 10.0)
+        # A pause between key presses is not a drop; a flagged but drawn frame still counts as shown.
+        self.assertEqual(sr.dropped_pct(stats(steady[:5] + [t + 500 for t in steady[5:]])), 0.0)
+        self.assertEqual(sr.dropped_pct(stats(steady, flags={4: 1})), 0.0)
+        self.assertAlmostEqual(sr.dropped_pct(stats(steady, flags={4: 8})), 100 / 9)  # skipped: nothing drawn
+        self.assertIsNone(sr.dropped_pct(stats([0.0])))
+
     def test_percentile_edges(self):
         self.assertIsNone(sr.percentile([], 50))
         self.assertEqual(sr.percentile([3.0], 99), 3.0)

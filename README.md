@@ -5,7 +5,7 @@ large banner tiles, springy focus motion, and a Quick Controls panel. Written in
 Jetpack Compose (foundation only), built to be smoother and lighter than the stock launcher
 without turning the effects off. No ads, no recommendations, no analytics.
 
-Status: early (v0.1.0). Developed and measured on an NVIDIA Shield (Android 11); Google TV and
+Status: early (v0.2.0). Developed and measured on an NVIDIA Shield (Android 11); Google TV and
 Fire TV devices are secondary targets.
 
 | Home | Edit mode |
@@ -38,52 +38,77 @@ Fire TV devices are secondary targets.
   audio formats), Display (resolution, refresh rate, HDR, supported modes), Storage and About.
   Android only lets apps read most of this, so joining networks, pairing and changing the
   resolution open Android's own page, one row away.
+- **Backup**: export every setting (look, wallpaper, dock, hidden apps and the rest) to a JSON file
+  and import it again, on this TV or another. Uses Android's file picker when the TV has one,
+  otherwise `Download/GlassLauncher/`.
 - Debug builds add a frame-time HUD for spotting jank by eye.
 
-## Install
+## Install on your TV (no computer needed)
 
-Requires Android TV or Google TV, Android 9 (API 28) or newer.
+Works on Android TV, Google TV and Fire TV with Android 9 or newer.
 
-**On the TV, no computer needed.**
+Want pictures of every step? See the [install guide](docs/install-guide.md) for Shield / Google TV
+and Fire TV. Stuck? Paste the [AI help text](docs/ai-install-help.md) into ChatGPT, Claude or
+Gemini and it walks you through each step.
 
-1. Install **Downloader** by AFTVnews from the Play Store.
-2. Let it install apps: Settings, Device Preferences, Security & restrictions, Unknown sources,
-   Downloader (menu names vary a little between TVs).
-3. Open Downloader and enter the code **9798602**, or the full address
-   `https://github.com/Kevsosmooth/glass-launcher/releases/latest/download/glass-launcher.apk`.
-4. Install, then open Glass Launcher from your apps.
+1. Install **Downloader** by AFTVnews from the Google Play Store or the Amazon Appstore.
+2. Let Downloader install apps:
+   - Android TV / Google TV: Settings, Device Preferences, Security & restrictions, Unknown
+     sources, Downloader (the menu names differ a little between TVs).
+   - Fire TV: Settings, My Fire TV, Developer options, Install unknown apps, Downloader. If
+     Developer options is missing, open Settings, My Fire TV, About and press Select on the
+     device name seven times.
+3. Open Downloader, select the address bar, enter the code **9798602** and press **Load**.
+   A short page counts down about 6 seconds, then the download starts by itself.
+4. Choose **Install**, then **Done**. Downloader offers to delete the downloaded file; that is
+   safe, Glass stays installed.
+5. Open **Glass** from your apps. Installing does not change the Home button yet; the first time
+   Glass opens it offers **Show me how** for the next step.
 
-The code always points to the newest release. One APK runs on every TV (ARM and x86).
+| Enter the code, then Load | Install |
+| --- | --- |
+| ![Downloader with code 9798602](docs/images/install/enter-code.jpg) | ![Android's install prompt](docs/images/install/install-prompt.jpg) |
 
-**With adb.** Download `glass-launcher.apk` from the [Releases](../../releases) page, then:
+The code always points at the newest release, so to update, run the same steps again. Your
+settings are kept. Without the code, the address is
+`https://github.com/Kevsosmooth/glass-launcher/releases/latest/download/glass-launcher.apk`.
+
+## Make it your Home screen
+
+Most TVs send the Home button to their own launcher, so Glass needs one extra step. (Some
+Android TV boxes ask "Select a Home app" the first time you press Home: pick Glass, Always, and
+you are done.) Glass is then the real home screen, not an app on top of another one: the helper
+just sends Home to it, and with a computer you can go further and switch the stock launcher off
+(see Advanced).
+
+**On the TV: Home button helper.** In Glass, open Quick Controls (Menu key, or the status pill),
+then Launcher settings, Home button helper, Open Accessibility settings, and turn on **Glass
+Launcher Home button** (on the Shield and Google TV it is under Device Preferences, Accessibility,
+Services). Home then opens Glass; the TV's own screen may show for a moment first. The helper is an
+accessibility service that only watches for the Home button and the stock home screen; it reads no
+screen content. Turn it off in the same place to go back.
+
+<img src="docs/images/install/home-helper.jpg" alt="Home button helper page" width="343">
+
+**Fire TV** does not list apps' accessibility services (checked on Fire OS 7.7), so there the
+helper needs one command from a computer with adb (see below), once. The Home button helper
+page shows the command and whether the helper is on. Fire TV's own screen may show for a moment
+before Glass covers it.
+
+## Advanced: adb, scripts and building
+
+For these, turn on debugging: Settings, Device Preferences, About, press Build seven times; then
+Developer options, Network debugging or USB debugging (Fire TV: Developer options, ADB debugging).
+
+**Install over adb.**
 
 ```
 adb connect <tv-ip>:5555
-adb -s <tv-ip>:5555 install -r glass-launcher.apk
+adb -s <tv-ip>:5555 install -r glass-launcher.apk     # from the Releases page
 ```
 
-**From source.** Needs JDK 17 and the Android SDK:
-
-```
-./gradlew :app:assembleRelease          # app/build/outputs/apk/release/app-release.apk
-```
-
-Release builds are signed with your debug key unless a `keystore.properties` (storeFile,
-storePassword, keyAlias, keyPassword) sits in the repo root; it is git-ignored.
-
-or use the helper, which can build on another machine over ssh and copies the APK to `out/`:
-
-```
-BUILD_HOST=my-build-box tools/build.sh release      # leave BUILD_HOST unset to build here
-DEVICE=<tv-ip>:5555 tools/install.sh release
-```
-
-Open it from the app list. To use it as the Home screen, see below.
-
-## Make it the default Home screen
-
-Android TV picks Home from the launchers installed. The reliable way to make Glass the only
-one is to disable the stock launcher for your user (reversible, no root):
+**Shield, Google TV and Android TV: disable the stock launcher.** The most complete switch, with
+no helper needed (reversible, no root):
 
 ```
 DEVICE=<tv-ip>:5555 tools/make-default.sh            # dry run: prints what it would do
@@ -94,13 +119,38 @@ DEVICE=<tv-ip>:5555 tools/make-default.sh --undo     # brings the stock launcher
 The script refuses to disable anything unless Glass is installed first. If Projectivy Launcher is
 present it asks before uninstalling it (`--remove-projectivy` answers yes; an uninstall cannot be
 undone). Equivalent by hand:
-`adb shell pm disable-user --user 0 com.google.android.tvlauncher` (undo with `pm enable`).
-
+`adb shell pm disable-user --user 0 com.google.android.tvlauncher` on Shield and Android TV, or
+`com.google.android.apps.tv.launcherx` on Google TV (undo with `pm enable`).
 If a TV ever ends up without a Home screen, `--undo` (or the `pm enable` line) fixes it.
 
-**Fire TV / Fire OS.** Fire OS does not let apps replace the Home screen, and its launcher cannot
-be disabled without root. Glass Launcher runs there as a normal app (find it under Your Apps),
-but the Home button still opens Fire TV's own launcher. `make-default.sh` explains this and exits.
+**Fire TV: turn on the Home button helper.** Fire OS's launcher cannot be disabled without root:
+
+```
+DEVICE=<tv-ip>:5555 tools/home-helper.sh            # dry run
+DEVICE=<tv-ip>:5555 tools/home-helper.sh --apply    # helper on (other services are kept)
+DEVICE=<tv-ip>:5555 tools/home-helper.sh --undo     # helper off
+DEVICE=<tv-ip>:5555 tools/test-home-helper.sh       # presses Home twice, checks Glass comes up
+DEVICE=<tv-ip>:5555 tools/test-firetv.sh            # everything: install, screens, helper, restore
+```
+
+`test-firetv.sh` waits for "Allow USB debugging" on a first connection, stops if a video app is in
+front, and writes `shots/firetv-<time>/summary.md` with one PASS/FAIL line per step. It turns the
+helper off again at the end unless you pass `--keep-helper`.
+
+**Build from source.** Needs JDK 17 and the Android SDK:
+
+```
+./gradlew :app:assembleRelease          # app/build/outputs/apk/release/app-release.apk
+```
+
+Release builds are signed with your debug key unless a `keystore.properties` (storeFile,
+storePassword, keyAlias, keyPassword) sits in the repo root; it is git-ignored. Or use the
+helpers, which can build on another machine over ssh and copy the APK to `out/`:
+
+```
+BUILD_HOST=my-build-box tools/build.sh release      # leave BUILD_HOST unset to build here
+DEVICE=<tv-ip>:5555 tools/install.sh release
+```
 
 ## Settings
 

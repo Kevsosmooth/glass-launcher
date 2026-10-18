@@ -16,4 +16,5 @@ object TestTags {
     const val APP_MENU = "app_menu"
     const val SETTINGS = "settings"
     const val QUICK_CONTROLS = "quick_controls"
+    const val HOME_SETUP = "home_setup"
 }

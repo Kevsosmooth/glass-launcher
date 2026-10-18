@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Offline tests for lib.sh and make-default.sh using tools/fixtures/fake-adb. No device needed.
+# Offline tests for lib.sh, make-default.sh, home-helper.sh and test-firetv.sh using tools/fixtures/fake-adb. No device needed.
 # Usage: tools/test_scripts.sh
 set -uo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -102,8 +102,68 @@ if [[ -x "$HERE/make-default.sh" ]]; then
     FAKE_PACKAGES="com.google.android.tvlauncher" check "refuses without Glass" 1 "not installed" -- "$HERE/make-default.sh" --apply
     FAKE_PACKAGES="$PKGS" check "undo" 0 "enabled" -- "$HERE/make-default.sh" --undo
     logged "pm enable com.google.android.tvlauncher" || { FAILS=$((FAILS + 1)); echo "FAIL undo did not enable stock launcher"; }
-    FAKE_FEATURES="" FAKE_MANUFACTURER=Amazon FAKE_PACKAGES="$PKGS" check "Fire TV explains and exits 0" 0 "Fire TV" -- "$HERE/make-default.sh" --apply
+    FAKE_FEATURES="" FAKE_MANUFACTURER=Amazon FAKE_PACKAGES="$PKGS" check "Fire TV points to the helper and exits 0" 0 "home-helper.sh --apply" -- "$HERE/make-default.sh" --apply
     logged "pm disable-user" && { FAILS=$((FAILS + 1)); echo "FAIL Fire TV was modified"; }
 fi
+# home-helper.sh and test-home-helper.sh
+SVC=com.kevin.glasslauncher/com.kevin.glasslauncher.homebutton.HomeButtonService
+a11y() { cat "$STATE/a11y" 2>/dev/null || echo "<none>"; }
+expect_a11y() { [[ "$(a11y)" == "$1" ]] || { FAILS=$((FAILS + 1)); echo "FAIL $2: services are '$(a11y)'"; }; }
+export FAKE_PACKAGES=com.kevin.glasslauncher
+echo "com.other/.Svc" > "$STATE/a11y"
+check "home-helper dry run" 0 "would set: com.other/.Svc:$SVC" -- "$HERE/home-helper.sh"
+logged "settings put" && { FAILS=$((FAILS + 1)); echo "FAIL home-helper dry run changed settings"; }
+check "home-helper apply" 0 "Helper on" -- "$HERE/home-helper.sh" --apply
+expect_a11y "com.other/.Svc:$SVC" "apply keeps other services"
+logged "accessibility_enabled 1" || { FAILS=$((FAILS + 1)); echo "FAIL apply did not switch accessibility on"; }
+check "home-helper apply twice" 0 "Helper on" -- "$HERE/home-helper.sh" --apply
+expect_a11y "com.other/.Svc:$SVC" "second apply adds nothing"
+check "home-helper undo" 0 "Helper off" -- "$HERE/home-helper.sh" --undo
+expect_a11y "com.other/.Svc" "undo keeps other services"
+echo "com.kevin.glasslauncher/.homebutton.HomeButtonService" > "$STATE/a11y"
+check "home-helper undo, short form, last service" 0 "Helper off" -- "$HERE/home-helper.sh" --undo
+expect_a11y "<none>" "undo of the only service"
+logged "accessibility_enabled 0" || { FAILS=$((FAILS + 1)); echo "FAIL undo left accessibility on with no services"; }
+FAKE_PACKAGES="" check "home-helper apply needs Glass" 1 "not installed" -- "$HERE/home-helper.sh" --apply
+expect_a11y "<none>" "apply without Glass changed nothing"
+hh() { SETTLE=0 WATCH_SECONDS=1 "$HERE/test-home-helper.sh" "$@"; }
+check "test-home-helper needs the helper on" 1 "home-helper.sh --apply" -- hh "$STATE/hh0"
+echo "$SVC" > "$STATE/a11y"
+FAKE_HOME_TOP=com.kevin.glasslauncher check "test-home-helper passes" 0 "2 passed, 0 failed" -- hh "$STATE/hh1"
+[[ -f "$STATE/hh1/from-glass.png" && -f "$STATE/hh1/from-settings.png" ]] || { FAILS=$((FAILS + 1)); echo "FAIL helper screenshots missing"; }
+logged "DPAD_CENTER" && { FAILS=$((FAILS + 1)); echo "FAIL test-home-helper pressed Select"; }
+FAKE_HOME_TOP=com.amazon.tv.launcher check "test-home-helper fails on stock home" 1 "FAIL from-settings: com.amazon.tv.launcher" -- hh "$STATE/hh2"
+FAKE_TOP=com.netflix.ninja check "test-home-helper stops while Netflix is in front" 1 "in use" -- hh "$STATE/hh3"
+logged "KEYCODE_HOME" && { FAILS=$((FAILS + 1)); echo "FAIL Home pressed while the TV was busy"; }
+unset FAKE_PACKAGES
+
+# test-firetv.sh: the whole run against the fake TV
+touch "$STATE/app-debug.apk"
+ftv() {
+    rm -f "$STATE/getstate" "$STATE/a11y"
+    FAKE_MANUFACTURER=Amazon FAKE_PACKAGES=com.kevin.glasslauncher FAKE_HOME_TOP=com.kevin.glasslauncher \
+        FAKE_DUMP="$HERE/fixtures/layout_pass.xml" SETTLE=0 KEY_DELAY=0 WATCH_SECONDS=1 \
+        "$HERE/test-firetv.sh" --apk "$STATE/app-debug.apk" "$@"
+}
+check "test-firetv full run" 0 "0 failed" -- ftv "$STATE/ftv1"
+for f in summary.md device.txt glass-home.png glass-home.xml helper-page-off.png helper-page-on.png \
+    home-key/from-glass.png home-key/from-settings.png screens/01-home.png; do
+    [[ -f "$STATE/ftv1/$f" ]] || { FAILS=$((FAILS + 1)); echo "FAIL test-firetv did not write $f"; }
+done
+for want in "connect: PASS" "install: PASS" "launch: PASS (cold start 640 ms)" "layout: PASS" \
+    "helper bound by the system: PASS" "home key: PASS" "screens: PASS" "restore: PASS (helper off)"; do
+    grep -qF -- "$want" "$STATE/ftv1/summary.md" || { FAILS=$((FAILS + 1)); echo "FAIL summary lacks '$want'"; }
+done
+[[ ! -s "$STATE/a11y" ]] || { FAILS=$((FAILS + 1)); echo "FAIL test-firetv left the helper on"; }
+logged "install -r $STATE/app-debug.apk" || { FAILS=$((FAILS + 1)); echo "FAIL test-firetv did not install"; }
+FAKE_AUTH_AFTER=2 check "test-firetv waits for Allow" 0 "Always allow" -- ftv --no-screens "$STATE/ftv2"
+AUTH_WAIT=0 FAKE_AUTH_AFTER=9 check "test-firetv gives up without Allow" 1 "connect: FAIL" -- ftv "$STATE/ftv3"
+logged "install" && { FAILS=$((FAILS + 1)); echo "FAIL installed without an authorized connection"; }
+FAKE_TOP=com.amazon.avod check "test-firetv stops while Prime Video plays" 1 "idle: FAIL" -- ftv "$STATE/ftv4"
+logged "install\|keyevent" && { FAILS=$((FAILS + 1)); echo "FAIL acted while Prime Video was in front"; }
+check "test-firetv --keep-helper" 0 "helper left on" -- ftv --no-screens --keep-helper "$STATE/ftv5"
+grep -q HomeButtonService "$STATE/a11y" || { FAILS=$((FAILS + 1)); echo "FAIL --keep-helper turned it off"; }
+check "test-firetv without an APK" 1 "no APK" -- ftv --apk "$STATE/missing.apk" "$STATE/ftv6"
+
 echo "$((RUNS)) checks, $FAILS failed"
 exit $((FAILS > 0))

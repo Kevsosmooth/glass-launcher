@@ -22,6 +22,7 @@ enum class NativePage(private val actions: List<String>) {
     Language(listOf(Settings.ACTION_LOCALE_SETTINGS)),
     Location(listOf(Settings.ACTION_LOCATION_SOURCE_SETTINGS)),
     Update(listOf(ACTION_SYSTEM_UPDATE)),
+    Accessibility(listOf(Settings.ACTION_ACCESSIBILITY_SETTINGS)),
     All(emptyList()),
     ;
 

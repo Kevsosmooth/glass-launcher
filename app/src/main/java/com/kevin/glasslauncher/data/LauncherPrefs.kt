@@ -29,6 +29,8 @@ private object Keys {
     val appBackdrop = booleanPreferencesKey("app_backdrop")
     val recents = stringPreferencesKey("recents")
     val sleepAt = longPreferencesKey("sleep_at")
+    val appOrder = stringPreferencesKey("app_order")
+    val homeSetupSeen = booleanPreferencesKey("home_setup_seen")
 }
 
 /** DataStore-backed [Prefs]. Every setter is a single atomic edit. */
@@ -49,6 +51,8 @@ class LauncherPrefs(private val context: Context) {
             appBackdrop = p[Keys.appBackdrop] ?: d.appBackdrop,
             recents = p[Keys.recents]?.let(::decodeList) ?: d.recents,
             sleepAtMillis = p[Keys.sleepAt] ?: d.sleepAtMillis,
+            appOrder = AppOrder.entries.firstOrNull { it.name == p[Keys.appOrder] } ?: d.appOrder,
+            homeSetupSeen = p[Keys.homeSetupSeen] ?: d.homeSetupSeen,
         )
     }.distinctUntilChanged()
 
@@ -70,6 +74,24 @@ class LauncherPrefs(private val context: Context) {
     suspend fun setTopShelf(on: Boolean) = edit { it[Keys.topShelf] = on }
     suspend fun setAppBackdrop(on: Boolean) = edit { it[Keys.appBackdrop] = on }
     suspend fun setSleepAt(millis: Long) = edit { it[Keys.sleepAt] = millis }
+    suspend fun setAppOrder(order: AppOrder) = edit { it[Keys.appOrder] = order.name }
+    suspend fun setHomeSetupSeen() = edit { it[Keys.homeSetupSeen] = true }
+
+    /** Writes every non-null field of [patch] in one edit (one recomposition, no half-applied state). */
+    suspend fun restore(patch: PrefsPatch) = edit { p ->
+        patch.look?.let { p[Keys.look] = it.name }
+        patch.wallpaperId?.let { p[Keys.wallpaperId] = it }
+        patch.rotation?.let { p[Keys.rotation] = it.name }
+        if (patch.wallpaperId != null || patch.rotation != null) p[Keys.rotationSince] = System.currentTimeMillis()
+        patch.appBackdrop?.let { p[Keys.appBackdrop] = it }
+        patch.topShelf?.let { p[Keys.topShelf] = it }
+        patch.clock24?.let { p[Keys.clock24] = it }
+        patch.dockSize?.let { p[Keys.dockSize] = it.coerceIn(MIN_DOCK_SIZE, MAX_DOCK_SIZE) }
+        patch.favorites?.let { p[Keys.favorites] = encodeList(it) }
+        patch.hidden?.let { p[Keys.hidden] = it }
+        patch.hud?.let { p[Keys.hud] = it }
+        patch.appOrder?.let { p[Keys.appOrder] = it.name }
+    }
 
     suspend fun recordLaunch(key: String) = edit {
         it[Keys.recents] = encodeList(pushRecent(it[Keys.recents]?.let(::decodeList).orEmpty(), key))

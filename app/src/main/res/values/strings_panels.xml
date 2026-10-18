@@ -24,6 +24,9 @@
     <string name="panels_clock_12">12-hour</string>
     <string name="panels_clock_24">24-hour</string>
     <string name="panels_dock_size">Dock size</string>
+    <string name="panels_app_order">App order</string>
+    <string name="panels_app_order_used">Most used</string>
+    <string name="panels_app_order_az">A to Z</string>
     <string name="panels_hidden_apps">Hidden apps</string>
     <string name="panels_hidden_none">None</string>
     <string name="panels_hidden_count">%1$d hidden</string>
@@ -49,12 +52,12 @@
     <string name="panels_hidden_show_all">Show all apps</string>
     <string name="panels_hidden_loading">Loading apps…</string>
     <string name="panels_default_intro">Android TV only sends the Home button to its own launcher until you switch it off. Run these commands once from a computer with adb (the TV needs network debugging on).</string>
-    <string name="panels_default_google">Shield and Google TV: turn off the stock launcher.</string>
+    <string name="panels_default_google">Shield and Android TV: turn off the stock launcher. On Google TV (Chromecast and newer TVs) the package is com.google.android.apps.tv.launcherx instead.</string>
     <string name="panels_default_google_cmd" translatable="false">adb shell pm disable-user --user 0 com.google.android.tvlauncher</string>
     <string name="panels_default_undo">To undo and bring the stock launcher back:</string>
     <string name="panels_default_undo_cmd" translatable="false">adb shell pm enable com.google.android.tvlauncher</string>
     <string name="panels_default_projectivy">Projectivy: uninstall it from Settings, Apps (package com.spocky.projengmenu), then press Home and pick Glass.</string>
-    <string name="panels_default_fire">Fire TV: Fire OS ignores third-party launchers for the Home button. Open Glass from the apps row. A later version may add an accessibility option.</string>
+    <string name="panels_default_fire">Fire TV: Fire OS ignores third-party launchers for the Home button. Turn on the Home button helper (next row in Settings) and Home opens Glass.</string>
     <string name="panels_default_script">The project\'s tools/make-default.sh script runs these steps for you.</string>
 
     <!-- Quick Controls -->

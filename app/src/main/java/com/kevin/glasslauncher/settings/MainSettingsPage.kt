@@ -53,9 +53,3 @@ private fun SettingsRowView(row: SettingsRow, modifier: Modifier, onSelect: () -
         is RowKind.Info -> DetailRow(title, kind.value.resolve(), modifier)
     }
 }
-
-@Composable
-private fun UiText.resolve(): String = when (this) {
-    is UiText.Res -> stringResource(id, *args.toTypedArray())
-    is UiText.Raw -> text
-}

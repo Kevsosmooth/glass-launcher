@@ -16,10 +16,10 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 
-/** Home screen state: installed apps + saved prefs; null until both have loaded. */
+/** Home screen state: installed apps + saved prefs + screen time; null until apps and prefs have loaded. */
 class HomeViewModel(apps: AppRepository, prefs: LauncherPrefs) : ViewModel() {
-    val state: StateFlow<HomeState?> = combine(apps.apps.filterNotNull(), prefs.prefs) { list, p ->
-        buildHomeState(list, p)
+    val state: StateFlow<HomeState?> = combine(apps.apps.filterNotNull(), prefs.prefs, apps.usage) { list, p, usage ->
+        buildHomeState(list, p, usage = usage)
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     companion object {

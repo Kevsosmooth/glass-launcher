@@ -3,6 +3,7 @@ package com.kevin.glasslauncher.settings
 import androidx.annotation.StringRes
 import com.kevin.glasslauncher.R
 import com.kevin.glasslauncher.apps.AppEntry
+import com.kevin.glasslauncher.data.AppOrder
 import com.kevin.glasslauncher.data.Look
 import com.kevin.glasslauncher.data.MAX_DOCK_SIZE
 import com.kevin.glasslauncher.data.MIN_DOCK_SIZE
@@ -16,13 +17,14 @@ const val LICENSE_NAME = "MIT"
 const val SOURCE_URL = "https://github.com/Kevsosmooth/glass-launcher"
 
 /** Pages of the Settings panel; Back from any of them returns to [Main]. */
-enum class SettingsPage { Main, Wallpaper, HiddenApps, MakeDefault, Wifi, Bluetooth, Sound, Display, Storage, About }
+enum class SettingsPage { Main, Wallpaper, HiddenApps, MakeDefault, Wifi, Bluetooth, Sound, Display, Storage, About, Backup, HomeHelper }
 
 enum class SettingId {
     Look, Wallpaper, Rotation, AppBackdrop, TopShelf, Clock,
-    DockSize, HiddenApps, ResetDock, ConfirmResetDock,
+    DockSize, AppOrder, HiddenApps, ResetDock, ConfirmResetDock,
     Wifi, Bluetooth, Sound, Display, Storage, AboutDevice, AndroidSettings,
-    MakeDefault, Hud, Version, License, Source,
+    ExportSettings, ImportSettings,
+    MakeDefault, HomeHelper, Hud, Version, License, Source,
 }
 
 /** Live values shown beside the Device rows; null shows no value. */
@@ -62,6 +64,7 @@ sealed interface PrefChange {
     data class SetClock24(val on: Boolean) : PrefChange
     data class SetDockSize(val size: Int) : PrefChange
     data class SetHud(val on: Boolean) : PrefChange
+    data class SetAppOrder(val order: AppOrder) : PrefChange
     data class SetWallpaper(val id: String) : PrefChange
     data class SetHidden(val keys: Set<String>) : PrefChange
     data object ResetDock : PrefChange
@@ -102,9 +105,13 @@ fun settingsSections(
         SettingsSection(R.string.panels_section_appearance, appearanceRows(prefs)),
         SettingsSection(R.string.panels_section_home, homeRows(prefs, confirmingReset)),
         SettingsSection(R.string.system_section, deviceRows(device)),
+        SettingsSection(R.string.backup_section, backupRows),
         SettingsSection(
             R.string.panels_section_help,
-            listOf(SettingsRow(SettingId.MakeDefault, R.string.panels_make_default, RowKind.Link(null))),
+            listOf(
+                SettingsRow(SettingId.MakeDefault, R.string.panels_make_default, RowKind.Link(null)),
+                SettingsRow(SettingId.HomeHelper, R.string.home_helper_title, RowKind.Link(null)),
+            ),
         ),
         if (debug) {
             SettingsSection(
@@ -142,6 +149,12 @@ private fun appearanceRows(prefs: Prefs) = listOf(
 private fun homeRows(prefs: Prefs, confirmingReset: Boolean) = listOfNotNull(
     SettingsRow(SettingId.DockSize, R.string.panels_dock_size, RowKind.Choice(UiText.Raw(prefs.dockSize.toString()))),
     SettingsRow(
+        SettingId.AppOrder, R.string.panels_app_order,
+        RowKind.Choice(
+            UiText.Res(if (prefs.appOrder == AppOrder.MostUsed) R.string.panels_app_order_used else R.string.panels_app_order_az),
+        ),
+    ),
+    SettingsRow(
         SettingId.HiddenApps, R.string.panels_hidden_apps,
         RowKind.Link(
             if (prefs.hidden.isEmpty()) {
@@ -163,6 +176,12 @@ private fun deviceRows(device: DeviceSummary) = listOf(
     SettingsRow(SettingId.Storage, R.string.system_storage, RowKind.Link(device.storage)),
     SettingsRow(SettingId.AboutDevice, R.string.system_about, RowKind.Link(null)),
     SettingsRow(SettingId.AndroidSettings, R.string.system_android_settings, RowKind.Link(null)),
+)
+
+// Both open the Backup page, focused on the row that was picked; the work happens there.
+private val backupRows = listOf(
+    SettingsRow(SettingId.ExportSettings, R.string.backup_export, RowKind.Link(null)),
+    SettingsRow(SettingId.ImportSettings, R.string.backup_import, RowKind.Link(null)),
 )
 
 private fun lookText(look: Look) = UiText.Res(
@@ -189,6 +208,7 @@ fun onSelect(id: SettingId, prefs: Prefs): SettingsAction = when (id) {
     SettingId.TopShelf -> change(PrefChange.SetTopShelf(!prefs.topShelf))
     SettingId.Clock -> change(PrefChange.SetClock24(!prefs.clock24))
     SettingId.DockSize -> change(PrefChange.SetDockSize(cycle(DockSizes, prefs.dockSize)))
+    SettingId.AppOrder -> change(PrefChange.SetAppOrder(cycle(AppOrder.entries, prefs.appOrder)))
     SettingId.HiddenApps -> SettingsAction.Open(SettingsPage.HiddenApps)
     SettingId.ResetDock -> SettingsAction.ToggleResetConfirm
     SettingId.ConfirmResetDock -> change(PrefChange.ResetDock)
@@ -199,7 +219,9 @@ fun onSelect(id: SettingId, prefs: Prefs): SettingsAction = when (id) {
     SettingId.Storage -> SettingsAction.Open(SettingsPage.Storage)
     SettingId.AboutDevice -> SettingsAction.Open(SettingsPage.About)
     SettingId.AndroidSettings -> SettingsAction.OpenNative(NativePage.All)
+    SettingId.ExportSettings, SettingId.ImportSettings -> SettingsAction.Open(SettingsPage.Backup)
     SettingId.MakeDefault -> SettingsAction.Open(SettingsPage.MakeDefault)
+    SettingId.HomeHelper -> SettingsAction.Open(SettingsPage.HomeHelper)
     SettingId.Hud -> change(PrefChange.SetHud(!prefs.hud))
     SettingId.Version, SettingId.License, SettingId.Source -> SettingsAction.None
 }

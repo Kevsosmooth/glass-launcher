@@ -2,6 +2,9 @@ package com.kevin.glasslauncher.data
 
 enum class Look { Glass, Solid }
 
+/** How the All apps grid is sorted; dev builds go last either way. */
+enum class AppOrder { MostUsed, Alphabetical }
+
 /** How often the built-in wallpaper changes on its own. */
 enum class Rotation { Off, Hourly, Daily }
 
@@ -16,6 +19,7 @@ const val MAX_RECENTS = 10
  * then the dock follows it exactly. [recents] is most recent first. [sleepAtMillis] is the
  * wall-clock time the sleep timer fires, 0 when off. [rotationSinceMillis] is when the user
  * last picked a wallpaper or rotation mode: rotation steps count from there, so a pick shows at once.
+ * [homeSetupSeen] is set once the first-run "Make Glass your Home screen" card has shown.
  */
 data class Prefs(
     val favorites: List<String>? = null,
@@ -31,6 +35,8 @@ data class Prefs(
     val appBackdrop: Boolean = true,
     val recents: List<String> = emptyList(),
     val sleepAtMillis: Long = 0L,
+    val appOrder: AppOrder = AppOrder.MostUsed,
+    val homeSetupSeen: Boolean = false,
 )
 
 // App keys are "package/activity" and never contain a newline, so a newline-joined string keeps order.

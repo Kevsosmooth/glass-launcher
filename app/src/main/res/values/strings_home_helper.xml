@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings > Home button helper: accessibility service that sends Home to Glass on Fire TV. -->
+<resources>
+    <string name="home_helper_label">Glass Launcher Home button</string>
+    <string name="home_helper_service_description">Opens Glass Launcher when you press Home, on TVs that keep their own home screen such as Fire TV. It only watches for the Home button and the stock home screen; it does not read what is on screen.</string>
+    <string name="home_helper_title">Home button helper</string>
+    <string name="home_helper_status">Status</string>
+    <string name="home_helper_on">On</string>
+    <string name="home_helper_off">Off</string>
+    <string name="home_helper_open">Open Accessibility settings</string>
+    <string name="home_helper_intro">Fire TV and some Google TVs always send Home to their own screen. Turn this on and Home opens Glass instead.</string>
+    <string name="home_helper_steps">In Accessibility, pick Glass Launcher Home button and turn it on. If Settings opens on its main page, Accessibility is under Device Preferences. To go back to the stock home screen, turn it off there.</string>
+    <string name="home_helper_adb">If Glass is not listed there (common on Fire TV), run this once from a computer with adb. It replaces any other accessibility service turned on the same way; the project\'s tools/home-helper.sh keeps them.</string>
+    <string name="home_helper_adb_cmd" translatable="false">adb shell settings put secure enabled_accessibility_services com.kevin.glasslauncher/com.kevin.glasslauncher.homebutton.HomeButtonService\nadb shell settings put secure accessibility_enabled 1</string>
+    <string name="home_helper_note">On some TVs (Fire TV, or a Shield with its stock launcher on) the stock screen may show for a moment before Glass covers it.</string>
+    <!-- First-run card when Home still opens the TV's own home screen. -->
+    <string name="home_setup_title">Make Glass your Home screen?</string>
+    <string name="home_setup_body">Glass is installed, but the Home button still opens your TV\'s own home screen. Set it up once and Home opens Glass.</string>
+    <string name="home_setup_go">Show me how</string>
+    <string name="home_setup_later">Not now</string>
+    <string name="home_setup_where">You can find this later in Launcher settings, Home button helper.</string>
+</resources>

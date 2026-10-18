@@ -2,7 +2,6 @@ package com.kevin.glasslauncher
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
@@ -27,6 +26,8 @@ private val DEBUG_PAGES = mapOf(
     "display" to SettingsPage.Display,
     "storage" to SettingsPage.Storage,
     "about" to SettingsPage.About,
+    "backup" to SettingsPage.Backup,
+    "homehelper" to SettingsPage.HomeHelper,
 )
 
 /**
@@ -59,13 +60,6 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         container.apps.refresh()
-    }
-
-    // Before the views: Compose consumes Menu, so onKeyDown never sees it.
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.keyCode != KeyEvent.KEYCODE_MENU) return super.dispatchKeyEvent(event)
-        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) root.toggle(Overlay.QuickControls)
-        return true
     }
 
     private fun handleExtras(intent: Intent) {

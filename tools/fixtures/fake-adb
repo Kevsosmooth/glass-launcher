@@ -11,6 +11,9 @@
 #   FAKE_DUMP_BUSY  1 = `uiautomator dump` fails like it does on a screen that never goes idle
 #   FAKE_REPORT     directory with good-* gfxinfo/framestats/meminfo/idle-cpu dumps (tools/fixtures/report)
 #   FAKE_RELEASE    1 = the installed package is not debuggable
+#   FAKE_HOME_TOP   package that `input keyevent KEYCODE_HOME` brings to the front (unset: no change)
+#                   FAKE_STATE/a11y holds secure enabled_accessibility_services (missing = null)
+#   FAKE_AUTH_AFTER `get-state` answers "unauthorized" until it has been asked this many times
 #   FAKE_LOG        file that receives one line per call
 set -u
 echo "$*" >> "${FAKE_LOG:-/dev/null}"
@@ -19,6 +22,10 @@ if [[ "${args[0]:-}" == "-s" ]]; then args=("${args[@]:2}"); fi
 cmd="${args[0]:-}"; shift_args=("${args[@]:1}")
 case "$cmd" in
     connect) echo "connected to ${shift_args[0]:-}" ;;
+    get-state)
+        n=$(( $(cat "${FAKE_STATE:?}/getstate" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$FAKE_STATE/getstate"
+        if (( n <= ${FAKE_AUTH_AFTER:-0} )); then echo "error: device unauthorized." >&2; exit 1; fi
+        echo device ;;
     pull)
         [[ "${shift_args[0]}" == -q ]] && shift_args=("${shift_args[@]:1}")
         case "${shift_args[0]}" in
@@ -31,9 +38,19 @@ case "$cmd" in
             "dumpsys activity activities")
                 top=${FAKE_TOP:-$(cat "${FAKE_STATE:?}/top" 2>/dev/null || echo com.google.android.tvlauncher)}
                 echo "  mResumedActivity: ActivityRecord{1 u0 $top/.MainActivity t5}" ;;
-            "am start -W -n com.kevin.glasslauncher/"*) [[ "${FAKE_STUCK:-0}" == 1 ]] || echo com.kevin.glasslauncher > "${FAKE_STATE:?}/top" ;;
+            "am start -W -n com.kevin.glasslauncher/"*)
+                [[ "${FAKE_STUCK:-0}" == 1 ]] || echo com.kevin.glasslauncher > "${FAKE_STATE:?}/top"
+                echo "TotalTime: 640" ;;
+            "dumpsys accessibility")
+                grep -q HomeButtonService "${FAKE_STATE:?}/a11y" 2>/dev/null \
+                    && echo "    Bound services:{Service[label=Glass Launcher Home b…, feedbackType[FEEDBACK_GENERIC]]}" ; : ;;
             "dumpsys power")
                 if [[ "$(cat "${FAKE_STATE:?}/awake" 2>/dev/null || echo 1)" == 1 ]]; then echo "  mWakefulness=Awake"; else echo "  mWakefulness=Asleep"; fi ;;
+            "input keyevent KEYCODE_HOME") [[ -n "${FAKE_HOME_TOP:-}" ]] && echo "$FAKE_HOME_TOP" > "${FAKE_STATE:?}/top"; : ;;
+            "am start -a android.settings.SETTINGS") echo com.android.tv.settings > "${FAKE_STATE:?}/top" ;;
+            "settings get secure enabled_accessibility_services") cat "${FAKE_STATE:?}/a11y" 2>/dev/null || echo null ;;
+            "settings put secure enabled_accessibility_services "*) echo "${line#settings put secure enabled_accessibility_services }" | tr -d "'" > "${FAKE_STATE:?}/a11y" ;;
+            "settings delete secure enabled_accessibility_services") rm -f "${FAKE_STATE:?}/a11y" ;;
             "input keyevent KEYCODE_WAKEUP") [[ "${FAKE_WAKES:-0}" == 1 ]] && echo 1 > "${FAKE_STATE:?}/awake"; : ;;
             "uiautomator dump"*)
                 if [[ "${FAKE_DUMP_BUSY:-0}" == 1 ]]; then echo "ERROR: could not get idle state."; else echo "UI hierchary dumped to: /sdcard/gl-window.xml"; fi ;;

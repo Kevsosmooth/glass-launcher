@@ -1,5 +1,6 @@
 package com.kevin.glasslauncher.ui
 
+import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,14 +34,15 @@ import com.kevin.glasslauncher.glass.LocalGlass
 import com.kevin.glasslauncher.glass.WallpaperBackground
 import com.kevin.glasslauncher.home.FocusMemory
 import com.kevin.glasslauncher.home.HomeRoute
+import com.kevin.glasslauncher.homebutton.homeOpensGlass
 import com.kevin.glasslauncher.settings.SettingsPage
 import com.kevin.glasslauncher.settings.SettingsScreen
 import kotlinx.coroutines.flow.Flow
 
 /** Panels drawn over home. */
-enum class Overlay { Settings, QuickControls }
+enum class Overlay { Settings, QuickControls, HomeSetup }
 
-/** Which overlay is open; the activity flips it from the Menu key and launch extras. */
+/** Which overlay is open; Menu (via [handleMenu]) and the activity's launch extras flip it. */
 class RootController {
     var overlay by mutableStateOf<Overlay?>(null)
 
@@ -53,6 +57,16 @@ class RootController {
     fun toggle(target: Overlay) {
         settingsPage = SettingsPage.Main
         overlay = if (overlay == target) null else target
+    }
+
+    /**
+     * Menu toggles Quick Controls; true when [event] was Menu. Called from LauncherRoot's preview
+     * pass, before a focused row (which would consume it) sees the key.
+     */
+    fun handleMenu(event: KeyEvent): Boolean {
+        if (event.keyCode != KeyEvent.KEYCODE_MENU) return false
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) toggle(Overlay.QuickControls)
+        return true
     }
 
     fun openSettings(page: SettingsPage = SettingsPage.Main) {
@@ -82,6 +96,14 @@ fun LauncherRoot(
             root.overlay = null
         }
     }
+    // First run: offer to make Glass the Home screen, once, unless Home already opens it.
+    val context = LocalContext.current
+    LaunchedEffect(prefs?.homeSetupSeen) {
+        if (prefs?.homeSetupSeen == false && root.overlay == null && !homeOpensGlass(context)) {
+            root.overlay = Overlay.HomeSetup
+            container.prefs.setHomeSetupSeen()
+        }
+    }
     BackHandler(enabled = root.overlay != null) { root.overlay = null }
     val homeFocus = remember { FocusRequester() }
     var overlayWasOpen by remember { mutableStateOf(false) }
@@ -99,7 +121,7 @@ fun LauncherRoot(
         }
     }
     CompositionLocalProvider(LocalGlass provides glass) {
-        Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
+        Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }.onPreviewKeyEvent { root.handleMenu(it.nativeKeyEvent) }) {
             WallpaperBackground(glass)
             Box(Modifier.fillMaxSize().focusRequester(homeFocus).onFocusChanged { homeHasFocus = it.hasFocus }.focusRestorer()) {
                 HomeRoute(container, homeSignals, focusMemory, onLaunch, onOpenControls = { root.overlay = Overlay.QuickControls })
@@ -112,6 +134,10 @@ fun LauncherRoot(
                     container,
                     onClose = { root.overlay = null },
                     onOpenSettings = root::openSettings,
+                )
+                Overlay.HomeSetup -> HomeSetupPanel(
+                    onSetUp = { root.openSettings(SettingsPage.HomeHelper) },
+                    onClose = { root.overlay = null },
                 )
                 null -> Unit
             }
