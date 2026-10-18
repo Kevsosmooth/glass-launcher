@@ -4,11 +4,13 @@ import androidx.annotation.StringRes
 import com.kevin.glasslauncher.R
 import com.kevin.glasslauncher.apps.AppEntry
 import com.kevin.glasslauncher.data.AppOrder
+import com.kevin.glasslauncher.data.City
 import com.kevin.glasslauncher.data.Look
 import com.kevin.glasslauncher.data.MAX_DOCK_SIZE
 import com.kevin.glasslauncher.data.MIN_DOCK_SIZE
 import com.kevin.glasslauncher.data.Prefs
 import com.kevin.glasslauncher.data.Rotation
+import com.kevin.glasslauncher.data.TempUnit
 import com.kevin.glasslauncher.glass.WallpaperCatalog
 import com.kevin.glasslauncher.home.buildHomeState
 import com.kevin.glasslauncher.system.NativePage
@@ -17,14 +19,14 @@ const val LICENSE_NAME = "MIT"
 const val SOURCE_URL = "https://github.com/Kevsosmooth/glass-launcher"
 
 /** Pages of the Settings panel; Back from any of them returns to [Main]. */
-enum class SettingsPage { Main, Wallpaper, HiddenApps, MakeDefault, Wifi, Bluetooth, Sound, Display, Storage, About, Backup, HomeHelper }
+enum class SettingsPage { Main, Wallpaper, HiddenApps, MakeDefault, Wifi, Bluetooth, Sound, Display, Storage, About, Backup, HomeHelper, WeatherLocation }
 
 enum class SettingId {
-    Look, Wallpaper, Rotation, AppBackdrop, TopShelf, Clock,
+    Look, Wallpaper, Rotation, AppBackdrop, TopShelf, Clock, Weather, TemperatureUnit, WeatherLocation,
     DockSize, AppOrder, HiddenApps, ResetDock, ConfirmResetDock,
     Wifi, Bluetooth, Sound, Display, Storage, AboutDevice, AndroidSettings,
     ExportSettings, ImportSettings,
-    MakeDefault, HomeHelper, Hud, Version, License, Source,
+    MakeDefault, HomeHelper, Hud, Version, CheckUpdates, License, Source,
 }
 
 /** Live values shown beside the Device rows; null shows no value. */
@@ -67,6 +69,10 @@ sealed interface PrefChange {
     data class SetAppOrder(val order: AppOrder) : PrefChange
     data class SetWallpaper(val id: String) : PrefChange
     data class SetHidden(val keys: Set<String>) : PrefChange
+    data class SetWeatherOn(val on: Boolean) : PrefChange
+    data class SetTempUnit(val unit: TempUnit) : PrefChange
+    data class SetWeatherCity(val city: City?) : PrefChange
+    data class SetWeatherDeviceLocation(val on: Boolean) : PrefChange
     data object ResetDock : PrefChange
 }
 
@@ -76,6 +82,7 @@ sealed interface SettingsAction {
     data class Open(val page: SettingsPage) : SettingsAction
     data class OpenNative(val page: NativePage) : SettingsAction
     data object ToggleResetConfirm : SettingsAction
+    data object CheckUpdates : SettingsAction
     data object None : SettingsAction
 }
 
@@ -93,16 +100,21 @@ fun hideAllButDock(apps: List<AppEntry>, prefs: Prefs): Set<String> {
     return apps.map { it.key }.filterNotTo(HashSet()) { it in dock }
 }
 
-/** Rows of the main page, grouped. [debug] adds the Developer section. */
+/**
+ * Rows of the main page, grouped; About (with the Stats overlay toggle) comes last.
+ * [weatherAutoName] is the automatically found weather city, if it has a name; [updateStatus] is
+ * the "Check for updates" row's value (last result, or the update in progress).
+ */
 fun settingsSections(
     prefs: Prefs,
     confirmingReset: Boolean,
-    debug: Boolean,
     versionName: String,
     device: DeviceSummary = DeviceSummary(),
+    weatherAutoName: String? = null,
+    updateStatus: String? = null,
 ): List<SettingsSection> =
-    listOfNotNull(
-        SettingsSection(R.string.panels_section_appearance, appearanceRows(prefs)),
+    listOf(
+        SettingsSection(R.string.panels_section_appearance, appearanceRows(prefs) + weatherRows(prefs, weatherAutoName)),
         SettingsSection(R.string.panels_section_home, homeRows(prefs, confirmingReset)),
         SettingsSection(R.string.system_section, deviceRows(device)),
         SettingsSection(R.string.backup_section, backupRows),
@@ -113,20 +125,14 @@ fun settingsSections(
                 SettingsRow(SettingId.HomeHelper, R.string.home_helper_title, RowKind.Link(null)),
             ),
         ),
-        if (debug) {
-            SettingsSection(
-                R.string.panels_section_developer,
-                listOf(SettingsRow(SettingId.Hud, R.string.panels_hud, RowKind.Toggle(prefs.hud))),
-            )
-        } else {
-            null
-        },
         SettingsSection(
             R.string.panels_section_about,
             listOf(
                 SettingsRow(SettingId.Version, R.string.panels_version, RowKind.Info(UiText.Raw(versionName))),
+                SettingsRow(SettingId.CheckUpdates, R.string.update_check, RowKind.Link(updateStatus?.let(UiText::Raw))),
                 SettingsRow(SettingId.License, R.string.panels_license, RowKind.Info(UiText.Raw(LICENSE_NAME))),
                 SettingsRow(SettingId.Source, R.string.panels_source, RowKind.Info(UiText.Raw(SOURCE_URL))),
+                SettingsRow(SettingId.Hud, R.string.panels_hud, RowKind.Toggle(prefs.hud)),
             ),
         ),
     )
@@ -145,6 +151,21 @@ private fun appearanceRows(prefs: Prefs) = listOf(
         RowKind.Choice(UiText.Res(if (prefs.clock24) R.string.panels_clock_24 else R.string.panels_clock_12)),
     ),
 )
+
+private fun weatherRows(prefs: Prefs, autoName: String?) = listOf(
+    SettingsRow(SettingId.Weather, R.string.weather_toggle, RowKind.Toggle(prefs.weatherOn)),
+    SettingsRow(
+        SettingId.TemperatureUnit, R.string.weather_temperature,
+        RowKind.Choice(UiText.Res(if (prefs.tempUnit == TempUnit.Fahrenheit) R.string.weather_unit_f else R.string.weather_unit_c)),
+    ),
+    SettingsRow(SettingId.WeatherLocation, R.string.weather_location, RowKind.Link(weatherLocationText(prefs.weatherCity, autoName))),
+)
+
+private fun weatherLocationText(picked: City?, autoName: String?): UiText = when {
+    picked != null -> UiText.Raw(picked.name)
+    autoName != null -> UiText.Res(R.string.weather_location_auto_named, listOf(autoName))
+    else -> UiText.Res(R.string.weather_location_auto)
+}
 
 private fun homeRows(prefs: Prefs, confirmingReset: Boolean) = listOfNotNull(
     SettingsRow(SettingId.DockSize, R.string.panels_dock_size, RowKind.Choice(UiText.Raw(prefs.dockSize.toString()))),
@@ -207,6 +228,9 @@ fun onSelect(id: SettingId, prefs: Prefs): SettingsAction = when (id) {
     SettingId.AppBackdrop -> change(PrefChange.SetAppBackdrop(!prefs.appBackdrop))
     SettingId.TopShelf -> change(PrefChange.SetTopShelf(!prefs.topShelf))
     SettingId.Clock -> change(PrefChange.SetClock24(!prefs.clock24))
+    SettingId.Weather -> change(PrefChange.SetWeatherOn(!prefs.weatherOn))
+    SettingId.TemperatureUnit -> change(PrefChange.SetTempUnit(cycle(TempUnit.entries, prefs.tempUnit)))
+    SettingId.WeatherLocation -> SettingsAction.Open(SettingsPage.WeatherLocation)
     SettingId.DockSize -> change(PrefChange.SetDockSize(cycle(DockSizes, prefs.dockSize)))
     SettingId.AppOrder -> change(PrefChange.SetAppOrder(cycle(AppOrder.entries, prefs.appOrder)))
     SettingId.HiddenApps -> SettingsAction.Open(SettingsPage.HiddenApps)
@@ -223,6 +247,7 @@ fun onSelect(id: SettingId, prefs: Prefs): SettingsAction = when (id) {
     SettingId.MakeDefault -> SettingsAction.Open(SettingsPage.MakeDefault)
     SettingId.HomeHelper -> SettingsAction.Open(SettingsPage.HomeHelper)
     SettingId.Hud -> change(PrefChange.SetHud(!prefs.hud))
+    SettingId.CheckUpdates -> SettingsAction.CheckUpdates
     SettingId.Version, SettingId.License, SettingId.Source -> SettingsAction.None
 }
 

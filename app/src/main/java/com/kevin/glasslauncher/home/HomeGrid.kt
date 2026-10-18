@@ -17,7 +17,7 @@ import com.kevin.glasslauncher.apps.AppEntry
 import com.kevin.glasslauncher.ui.TestTags
 
 /**
- * The one scrolling list: [top] (status pill, top shelf), [dock], then every app in [apps].
+ * The one scrolling list: [top] (status corner, top shelf), [dock], then every app in [apps].
  * Columns, gaps and side padding come from [HomeLayout], so dock tiles share the grid's columns.
  */
 @OptIn(ExperimentalFoundationApi::class)

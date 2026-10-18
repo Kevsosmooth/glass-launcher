@@ -8,18 +8,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kevin.glasslauncher.R
+import com.kevin.glasslauncher.glass.glass
 import com.kevin.glasslauncher.settings.ui.CodeBlock
 import com.kevin.glasslauncher.settings.ui.PanelStyle
 
-/** A short note shown inside Quick Controls instead of a crash or a silent failure. */
-enum class ControlsMessage { CannotOpen, AdminNeeded }
+/** A short note on a glass card in Quick Controls instead of a crash or a silent failure. */
+enum class ControlsMessage { CannotOpen, AdminNeeded, NoInstallScreen }
 
 @Composable
 fun ControlsMessageView(message: ControlsMessage, modifier: Modifier = Modifier) {
-    Column(modifier.padding(top = 12.dp)) {
+    Column(modifier.glass(16.dp).padding(vertical = 12.dp)) {
         val text = when (message) {
             ControlsMessage.CannotOpen -> R.string.panels_cannot_open
             ControlsMessage.AdminNeeded -> R.string.panels_admin_needed
+            ControlsMessage.NoInstallScreen -> R.string.update_no_permission_screen
         }
         BasicText(
             stringResource(text),

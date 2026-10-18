@@ -8,7 +8,6 @@
     <string name="panels_section_appearance">Appearance</string>
     <string name="panels_section_home">Home</string>
     <string name="panels_section_help">Help</string>
-    <string name="panels_section_developer">Developer</string>
     <string name="panels_section_about">About</string>
     <string name="panels_look">Look</string>
     <string name="panels_look_glass">Glass</string>
@@ -33,7 +32,7 @@
     <string name="panels_reset_dock">Reset dock</string>
     <string name="panels_reset_dock_confirm">Confirm: put the default apps back in the dock</string>
     <string name="panels_make_default">Make Glass your home screen</string>
-    <string name="panels_hud">Performance HUD</string>
+    <string name="panels_hud">Stats overlay</string>
     <string name="panels_version">Version</string>
     <string name="panels_license">License</string>
     <string name="panels_source">Source code</string>
@@ -61,6 +60,7 @@
     <string name="panels_default_script">The project\'s tools/make-default.sh script runs these steps for you.</string>
 
     <!-- Quick Controls -->
+    <string name="panels_quick_controls">Quick Controls</string>
     <string name="panels_sleep">Sleep</string>
     <string name="panels_sleep_timer">Sleep timer</string>
     <string name="panels_timer_off">Off</string>

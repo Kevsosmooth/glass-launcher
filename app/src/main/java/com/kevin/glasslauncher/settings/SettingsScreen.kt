@@ -25,6 +25,8 @@ import com.kevin.glasslauncher.system.SoundPage
 import com.kevin.glasslauncher.system.StoragePage
 import com.kevin.glasslauncher.system.WifiPage
 import com.kevin.glasslauncher.system.rememberPolled
+import com.kevin.glasslauncher.update.checkOrInstall
+import com.kevin.glasslauncher.update.updateStatusText
 import kotlinx.coroutines.launch
 
 private const val SUMMARY_POLL_MS = 5_000L
@@ -51,6 +53,8 @@ fun SettingsScreen(
     var returnTo by remember { mutableStateOf<SettingId?>(null) }
     var confirmingReset by remember { mutableStateOf(false) }
     var focusKey by remember { mutableIntStateOf(0) }
+    val weatherPlace by container.weather.place.collectAsStateWithLifecycle()
+    val updateState by container.updates.state.collectAsStateWithLifecycle()
     val apply: (PrefChange) -> Unit = { change -> scope.launch { change.applyTo(container.prefs) } }
 
     BackHandler(enabled = page != SettingsPage.Main) { page = SettingsPage.Main }
@@ -58,7 +62,9 @@ fun SettingsScreen(
         val current = prefs ?: return@GlassPanel
         when (page) {
             SettingsPage.Main -> MainSettingsPage(
-                sections = settingsSections(current, confirmingReset, BuildConfig.DEBUG, BuildConfig.VERSION_NAME, device),
+                sections = settingsSections(
+                    current, confirmingReset, BuildConfig.VERSION_NAME, device, weatherPlace.autoName, updateStatusText(updateState),
+                ),
                 focusId = returnTo,
                 focusKey = focusKey,
                 onSelect = { id ->
@@ -79,6 +85,8 @@ fun SettingsScreen(
                         // The panel stays open behind Android's screen, so Back lands here again.
                         is SettingsAction.OpenNative -> action.page.open(context)
                         SettingsAction.ToggleResetConfirm -> confirmingReset = !confirmingReset
+                        // The row's value reports the result, including a TV with no install screen.
+                        SettingsAction.CheckUpdates -> container.updates.checkOrInstall()
                         SettingsAction.None -> Unit
                     }
                 },
@@ -100,6 +108,15 @@ fun SettingsScreen(
             SettingsPage.Storage -> StoragePage()
             SettingsPage.About -> AboutPage()
             SettingsPage.Backup -> BackupPage(current, container.prefs::restore, startOnImport = returnTo == SettingId.ImportSettings)
+            SettingsPage.WeatherLocation -> WeatherLocationPage(
+                WeatherLocationChoice(current.weatherCity, current.weatherUseDeviceLocation, weatherPlace),
+                onSearch = container.weather::searchCities,
+                onUseDeviceLocation = { apply(PrefChange.SetWeatherDeviceLocation(it)) },
+                onPick = {
+                    apply(PrefChange.SetWeatherCity(it))
+                    page = SettingsPage.Main
+                },
+            )
         }
     }
 }

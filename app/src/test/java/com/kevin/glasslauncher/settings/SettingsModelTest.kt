@@ -3,9 +3,11 @@ package com.kevin.glasslauncher.settings
 import com.kevin.glasslauncher.R
 import com.kevin.glasslauncher.apps.AppEntry
 import com.kevin.glasslauncher.data.AppOrder
+import com.kevin.glasslauncher.data.City
 import com.kevin.glasslauncher.data.Look
 import com.kevin.glasslauncher.data.Prefs
 import com.kevin.glasslauncher.data.Rotation
+import com.kevin.glasslauncher.data.TempUnit
 import com.kevin.glasslauncher.system.NativePage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -18,7 +20,7 @@ class SettingsModelTest {
     private fun ids(sections: List<SettingsSection>) = sections.flatMap { s -> s.rows.map { it.id } }
 
     private fun row(p: Prefs, id: SettingId) =
-        settingsSections(p, confirmingReset = false, debug = true, versionName = "1.0").flatMap { it.rows }.first { it.id == id }
+        settingsSections(p, confirmingReset = false, versionName = "1.0").flatMap { it.rows }.first { it.id == id }
 
     @Test
     fun cycleWrapsAndStartsOverOnUnknown() {
@@ -71,7 +73,7 @@ class SettingsModelTest {
     @Test
     fun deviceSectionFollowsHomeWithLiveValues() {
         val device = DeviceSummary(wifi = UiText.Raw("Home"), display = UiText.Raw("4K 60 Hz"))
-        val sections = settingsSections(prefs, false, debug = false, versionName = "1", device = device)
+        val sections = settingsSections(prefs, false, versionName = "1", device = device)
         assertEquals(
             listOf(R.string.panels_section_appearance, R.string.panels_section_home, R.string.system_section),
             sections.take(3).map { it.title },
@@ -91,7 +93,7 @@ class SettingsModelTest {
 
     @Test
     fun backupSectionSitsAfterDeviceAndBeforeHelp() {
-        val sections = settingsSections(prefs, false, debug = false, versionName = "1")
+        val sections = settingsSections(prefs, false, versionName = "1")
         val titles = sections.map { it.title }
         assertEquals(titles.indexOf(R.string.system_section) + 1, titles.indexOf(R.string.backup_section))
         assertEquals(titles.indexOf(R.string.backup_section) + 1, titles.indexOf(R.string.panels_section_help))
@@ -109,21 +111,34 @@ class SettingsModelTest {
 
     @Test
     fun confirmRowOnlyWhileConfirming() {
-        val off = ids(settingsSections(prefs, confirmingReset = false, debug = false, versionName = "1"))
-        val on = ids(settingsSections(prefs, confirmingReset = true, debug = false, versionName = "1"))
+        val off = ids(settingsSections(prefs, confirmingReset = false, versionName = "1"))
+        val on = ids(settingsSections(prefs, confirmingReset = true, versionName = "1"))
         assertFalse(SettingId.ConfirmResetDock in off)
         assertEquals(on.indexOf(SettingId.ResetDock) + 1, on.indexOf(SettingId.ConfirmResetDock))
     }
 
     @Test
-    fun developerSectionOnlyInDebug() {
-        assertFalse(SettingId.Hud in ids(settingsSections(prefs, false, debug = false, versionName = "1")))
-        assertTrue(SettingId.Hud in ids(settingsSections(prefs, false, debug = true, versionName = "1")))
+    fun statsOverlayRowIsInReleaseBuildsUnderAbout() {
+        val about = settingsSections(prefs, false, versionName = "1").last()
+        assertEquals(R.string.panels_section_about, about.title)
+        val row = about.rows.last()
+        assertEquals(SettingId.Hud, row.id)
+        assertEquals(R.string.panels_hud, row.title)
+        assertEquals(RowKind.Toggle(false), row.kind)
+    }
+
+    @Test
+    fun checkForUpdatesRowShowsTheStatusAndChecks() {
+        val about = settingsSections(prefs, false, versionName = "1", updateStatus = "Up to date").last()
+        val row = about.rows.first { it.id == SettingId.CheckUpdates }
+        assertEquals(R.string.update_check, row.title)
+        assertEquals(RowKind.Link(UiText.Raw("Up to date")), row.kind)
+        assertEquals(SettingsAction.CheckUpdates, onSelect(SettingId.CheckUpdates, prefs))
     }
 
     @Test
     fun firstRowIsLookThenWallpaper() {
-        val all = ids(settingsSections(prefs, false, debug = false, versionName = "1"))
+        val all = ids(settingsSections(prefs, false, versionName = "1"))
         assertEquals(listOf(SettingId.Look, SettingId.Wallpaper), all.take(2))
     }
 
@@ -140,6 +155,45 @@ class SettingsModelTest {
         )
         assertEquals(RowKind.Toggle(false), row(prefs.copy(topShelf = false), SettingId.TopShelf).kind)
         assertEquals(RowKind.Info(UiText.Raw(SOURCE_URL)), row(prefs, SettingId.Source).kind)
+    }
+
+    @Test
+    fun weatherRowsFollowClockWithDefaults() {
+        val appearance = settingsSections(prefs.copy(tempUnit = TempUnit.Fahrenheit), false, versionName = "1").first().rows
+        val ids = appearance.map { it.id }
+        assertEquals(
+            listOf(SettingId.Clock, SettingId.Weather, SettingId.TemperatureUnit, SettingId.WeatherLocation),
+            ids.subList(ids.indexOf(SettingId.Clock), ids.size),
+        )
+        assertEquals(RowKind.Toggle(true), appearance.first { it.id == SettingId.Weather }.kind)
+        assertEquals(RowKind.Choice(UiText.Res(R.string.weather_unit_f)), appearance.first { it.id == SettingId.TemperatureUnit }.kind)
+        assertEquals(RowKind.Link(UiText.Res(R.string.weather_location_auto)), appearance.first { it.id == SettingId.WeatherLocation }.kind)
+    }
+
+    @Test
+    fun weatherLocationShowsPickedOrAutomaticCity() {
+        val auto = settingsSections(prefs, false, "1", weatherAutoName = "Brooklyn").flatMap { it.rows }
+        assertEquals(
+            RowKind.Link(UiText.Res(R.string.weather_location_auto_named, listOf("Brooklyn"))),
+            auto.first { it.id == SettingId.WeatherLocation }.kind,
+        )
+        val picked = prefs.copy(weatherCity = City("Oslo, Oslo, Norway", 59.91, 10.75))
+        assertEquals(RowKind.Link(UiText.Raw("Oslo, Oslo, Norway")), row(picked, SettingId.WeatherLocation).kind)
+        assertEquals(RowKind.Choice(UiText.Res(R.string.weather_unit_c)), row(prefs.copy(tempUnit = TempUnit.Celsius), SettingId.TemperatureUnit).kind)
+    }
+
+    @Test
+    fun weatherRowsActions() {
+        assertEquals(SettingsAction.Change(PrefChange.SetWeatherOn(false)), onSelect(SettingId.Weather, prefs.copy(weatherOn = true)))
+        assertEquals(
+            SettingsAction.Change(PrefChange.SetTempUnit(TempUnit.Celsius)),
+            onSelect(SettingId.TemperatureUnit, prefs.copy(tempUnit = TempUnit.Fahrenheit)),
+        )
+        assertEquals(
+            SettingsAction.Change(PrefChange.SetTempUnit(TempUnit.Fahrenheit)),
+            onSelect(SettingId.TemperatureUnit, prefs.copy(tempUnit = TempUnit.Celsius)),
+        )
+        assertEquals(SettingsAction.Open(SettingsPage.WeatherLocation), onSelect(SettingId.WeatherLocation, prefs))
     }
 
     @Test

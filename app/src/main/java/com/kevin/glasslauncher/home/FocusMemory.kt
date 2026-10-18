@@ -1,9 +1,12 @@
 package com.kevin.glasslauncher.home
 
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 
 /**
- * Which home tile a panel was opened from, so closing it puts focus back where the user was
+ * Which home tile or control a panel was opened from, so closing it puts focus back where the user was
  * (focusRestorer does not reach tiles nested in lazy rows). Saved when the panel opens: once the
  * focused node goes away, Compose may hand focus to another tile on its own.
  */
@@ -38,3 +41,7 @@ class FocusMemory {
         return tile.requestFocus()
     }
 }
+
+/** Marks the home control [focus] belongs to, so closing a panel it opened puts focus back on it. */
+fun Modifier.rememberedBy(memory: FocusMemory, focus: FocusRequester): Modifier =
+    onFocusChanged { if (it.isFocused) memory.focused(focus) }.focusRequester(focus)

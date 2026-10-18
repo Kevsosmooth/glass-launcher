@@ -14,7 +14,6 @@ data class HomeState(
     val recents: List<AppEntry>,
     val look: Look,
     val clock24: Boolean,
-    val hud: Boolean,
     val topShelf: Boolean,
     val appBackdrop: Boolean,
 )
@@ -54,7 +53,6 @@ fun buildHomeState(
         recents = prefs.recents.mapNotNull { byKey[it] },
         look = prefs.look,
         clock24 = prefs.clock24,
-        hud = prefs.hud,
         topShelf = prefs.topShelf,
         appBackdrop = prefs.appBackdrop,
     )

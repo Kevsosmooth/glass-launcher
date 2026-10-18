@@ -60,6 +60,7 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         container.apps.refresh()
+        container.updates.checkIfDue()
     }
 
     private fun handleExtras(intent: Intent) {

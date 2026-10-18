@@ -9,14 +9,20 @@ import com.kevin.glasslauncher.motion.Motion
  * Home dimensions at 960x540 dp, derived in [LayoutMath][homeMetrics] so a focused tile can never
  * cover a neighbour or poke out of the dock. With the current Motion tokens a 124 x 69.75 dp tile
  * peaks at 1.157x (1.15 plus spring overshoot) and, with its 16 dp shadow, reaches 18.8 dp past
- * each side, 15.3 dp above and 19.3 dp below. Adding the 6 dp margin gives a 25 dp column gap,
- * 26 dp row gap, 25/22/26 dp dock padding (side/top/bottom) and 45.5 dp grid side padding; the
- * dock slab starts 20.5 dp from the screen edge and its columns line up with the grid's.
+ * each side, 15.3 dp above and 19.3 dp below. The focused tile's name sits 4 dp under the 1.15x
+ * tile and reaches 24.2 dp below it. Adding the 6 dp margin gives a 25 dp column gap, 31 dp row
+ * gap, 25/22/31 dp dock padding (side/top/bottom) and 45.5 dp grid side padding; the dock slab
+ * starts 20.5 dp from the screen edge and its columns line up with the grid's.
  */
 object HomeLayout {
     const val COLUMNS = 6
     const val SCREEN_WIDTH_DP = 960f
     const val FOCUS_MARGIN_DP = 6f
+
+    /** The focused tile's name: [LABEL_GAP_DP] under the settled 1.15x tile, one [LABEL_LINE_DP] line. */
+    const val LABEL_GAP_DP = 4f
+    const val LABEL_LINE_DP = 15f
+    const val LABEL_TOP_DP = (Motion.FOCUS_SCALE - 1f) / 2f * TileSize.HEIGHT_DP + LABEL_GAP_DP
 
     /** What a focused tile can grow to; tests check the layout against it. */
     val Focus = FocusGeometry(
@@ -30,7 +36,10 @@ object HomeLayout {
         elevation = Motion.LIFT_ELEVATION.value,
     )
     val Footprint = focusFootprint(Focus)
-    val Metrics = homeMetrics(SCREEN_WIDTH_DP, COLUMNS, TileSize.WIDTH_DP, Footprint, FOCUS_MARGIN_DP)
+    val Metrics = homeMetrics(
+        SCREEN_WIDTH_DP, COLUMNS, TileSize.WIDTH_DP, Footprint, FOCUS_MARGIN_DP,
+        labelBottom = LABEL_TOP_DP + LABEL_LINE_DP,
+    )
 
     val SidePadding = Metrics.sidePadding.dp
     val TileGap = Metrics.columnGap.dp

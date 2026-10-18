@@ -17,8 +17,17 @@
     <!-- Edit mode "Uninstall" (ACTION_DELETE). -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
+    <!-- Network: once a day Glass asks GitHub for a newer release (and downloads it), and the
+         weather next to the clock comes from Open-Meteo (place from get.geojs.io unless the user
+         picks a city or opts in to the TV's location). Every host is allow-listed in code. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Updates: hand the downloaded, verified Glass APK to Android's installer; Android asks the
+         user to allow it (Install unknown apps) the first time. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Settings > Wi-Fi: connection details and nearby networks. Android only reveals network
-         names to apps with location access; Glass never reads the location itself. -->
+         names to apps with location access. Weather reads the TV's network location only after the
+         user turns on Use this TV's location in Settings > Weather location. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
@@ -45,6 +54,15 @@
         <intent>
             <action android:name="android.intent.action.OPEN_DOCUMENT" />
             <data android:mimeType="*/*" />
+        </intent>
+        <!-- Updater: see whether Install unknown apps is real or the TV's stub. -->
+        <intent>
+            <action android:name="android.settings.MANAGE_UNKNOWN_APP_SOURCES" />
+            <data android:scheme="package" />
+        </intent>
+        <!-- Updater: the system installer's confirmation screen, checked before Glass starts it. -->
+        <intent>
+            <action android:name="android.content.pm.action.CONFIRM_INSTALL" />
         </intent>
         <!-- Home button helper: see whether Accessibility settings is real or the TV's stub. -->
         <intent>
@@ -105,6 +123,12 @@
 
         <receiver
             android:name=".controls.SleepTimerReceiver"
+            android:exported="false" />
+
+        <!-- Updates: PackageInstaller's result for an update session; only our own PendingIntent
+             reaches it. -->
+        <receiver
+            android:name=".update.UpdateReceiver"
             android:exported="false" />
 
         <!-- Home button helper for TVs that keep their own home screen (Fire TV). Off until the

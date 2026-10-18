@@ -64,10 +64,10 @@ class LayoutMathTest {
     fun currentMetricsMatchTheHomeLayoutDoc() {
         val m = HomeLayout.Metrics
         assertEquals(25f, m.columnGap, 0f)
-        assertEquals(26f, m.rowGap, 0f)
+        assertEquals(31f, m.rowGap, 0f)
         assertEquals(45.5f, m.sidePadding, 0f)
         assertEquals(22f, m.dockPadTop, 0f)
-        assertEquals(26f, m.dockPadBottom, 0f)
+        assertEquals(31f, m.dockPadBottom, 0f)
         assertEquals(20.5f, m.dockInset, 0f)
     }
 
@@ -80,6 +80,15 @@ class LayoutMathTest {
         assertTrue(m.columnGap - f.side >= 6f)
         assertTrue(m.dockPadTop - f.top >= 6f)
         assertTrue(m.dockPadBottom - f.bottom >= 6f)
+    }
+
+    @Test
+    fun theFocusedNameGetsRoomBelowTheTile() {
+        val f = Footprint(side = 10.2f, top = 7f, bottom = 9.5f)
+        val m = homeMetrics(960f, 6, 124f, f, margin = 6f, labelBottom = 20f)
+        assertEquals(26f, m.rowGap, 0f)
+        assertEquals(26f, m.dockPadBottom, 0f)
+        assertEquals(13f, m.dockPadTop, 0f)
     }
 
     @Test

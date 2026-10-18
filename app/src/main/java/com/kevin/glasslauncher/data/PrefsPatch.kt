@@ -4,7 +4,8 @@ package com.kevin.glasslauncher.data
  * Some of the user's settings, e.g. read from a backup file. A null field is left as it is when
  * the patch is applied. [favorites] is the dock order. Recents, the sleep timer, the rotation
  * start time and the first-run Home card are not settings (usage history, running timers, one-off
- * hints) and are never part of a patch.
+ * hints) and are never part of a patch. [weatherCity] null leaves the city as it is (a patch
+ * cannot switch back to automatic location).
  */
 data class PrefsPatch(
     val look: Look? = null,
@@ -18,14 +19,20 @@ data class PrefsPatch(
     val hidden: Set<String>? = null,
     val hud: Boolean? = null,
     val appOrder: AppOrder? = null,
+    val weatherOn: Boolean? = null,
+    val tempUnit: TempUnit? = null,
+    val weatherCity: City? = null,
+    val weatherUseDeviceLocation: Boolean? = null,
 ) {
     /** How many settings this patch changes. */
     val size: Int
-        get() = listOf(look, wallpaperId, rotation, appBackdrop, topShelf, clock24, dockSize, favorites, hidden, hud, appOrder)
-            .count { it != null }
+        get() = listOf(
+            look, wallpaperId, rotation, appBackdrop, topShelf, clock24, dockSize, favorites, hidden, hud, appOrder,
+            weatherOn, tempUnit, weatherCity, weatherUseDeviceLocation,
+        ).count { it != null }
 }
 
-/** Every setting in these prefs; the dock is left out while it is still the default one. */
+/** Every setting in these prefs; the dock and weather city are left out while still the defaults. */
 fun Prefs.toPatch(): PrefsPatch = PrefsPatch(
     look = look,
     wallpaperId = wallpaperId,
@@ -38,4 +45,8 @@ fun Prefs.toPatch(): PrefsPatch = PrefsPatch(
     hidden = hidden,
     hud = hud,
     appOrder = appOrder,
+    weatherOn = weatherOn,
+    tempUnit = tempUnit,
+    weatherCity = weatherCity,
+    weatherUseDeviceLocation = weatherUseDeviceLocation,
 )

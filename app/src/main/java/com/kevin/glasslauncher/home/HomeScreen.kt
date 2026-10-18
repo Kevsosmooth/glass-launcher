@@ -15,15 +15,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kevin.glasslauncher.AppContainer
-import com.kevin.glasslauncher.BuildConfig
 import com.kevin.glasslauncher.apps.AppEntry
 import com.kevin.glasslauncher.apps.BannerCache
-import com.kevin.glasslauncher.debug.FrameHud
 import com.kevin.glasslauncher.edit.SelectGuard
 import com.kevin.glasslauncher.edit.moveKeys
 import com.kevin.glasslauncher.glass.GlassContext
@@ -42,15 +39,17 @@ fun HomeRoute(
     homeSignals: Flow<Unit>,
     focusMemory: FocusMemory,
     onLaunch: (AppEntry) -> Unit,
+    controlsOpen: Boolean,
     onOpenControls: () -> Unit,
+    onOpenWeather: () -> Unit,
 ) {
     val vm: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
     val state by vm.state.collectAsStateWithLifecycle()
-    state?.let { HomeScreen(it, container, homeSignals, focusMemory, onLaunch, onOpenControls) }
+    state?.let { HomeScreen(it, container, homeSignals, focusMemory, onLaunch, controlsOpen, onOpenControls, onOpenWeather) }
 }
 
 /**
- * Backdrop, then one lazy grid: top area (top shelf, status pill), the glass dock, all apps; the
+ * Backdrop, then one lazy grid: top area (top shelf, status corner), the glass dock, all apps; the
  * tile menu on top. Focusing the dock scrolls back to the top; Home/Back close the menu, finish a
  * move, scroll up and focus the first dock tile.
  */
@@ -61,7 +60,9 @@ private fun HomeScreen(
     homeSignals: Flow<Unit>,
     focusMemory: FocusMemory,
     onLaunch: (AppEntry) -> Unit,
+    controlsOpen: Boolean,
     onOpenControls: () -> Unit,
+    onOpenWeather: () -> Unit,
 ) {
     val grid = rememberLazyGridState()
     val tracker = remember { DirectionTracker() }
@@ -84,13 +85,12 @@ private fun HomeScreen(
         CompositionLocalProvider(LocalGlass provides glass) {
             HomeGrid(
                 state.grid, env, grid,
-                top = { HomeTop(state, dockFocus, container.banners, tracker, onLaunch, onOpenControls) },
+                top = { HomeTop(state, dockFocus, container.banners, tracker, onLaunch, controlsOpen, onOpenControls, onOpenWeather, focusMemory) },
                 dock = { MovableDock(dock, env, dockFocus, edit, grid) },
                 modifier = Modifier.fillMaxSize(),
             )
             edit.Menu(dockKeys, state.dockSize)
         }
-        if (BuildConfig.DEBUG && state.hud) FrameHud(Modifier.align(Alignment.BottomStart))
     }
 }
 

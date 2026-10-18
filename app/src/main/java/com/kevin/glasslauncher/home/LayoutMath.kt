@@ -94,11 +94,21 @@ private fun wiggleGrowth(a: Float, b: Float, degrees: Float): Pair<Float, Float>
 /**
  * Spacing from [footprint] plus [margin] of clear space, rounded up to whole dp. Every column
  * gap and dock edge leaves [margin] between a focused tile's footprint and its neighbour or the
- * slab edge; the leftover width is split into equal side paddings. Fails if nothing fits.
+ * slab edge; the leftover width is split into equal side paddings. [labelBottom] is how far the
+ * focused tile's name reaches below the tile, so rows and the dock leave room for it too. Fails
+ * if nothing fits.
  */
-fun homeMetrics(screenWidth: Float, columns: Int, tileWidth: Float, footprint: Footprint, margin: Float): HomeMetrics {
+fun homeMetrics(
+    screenWidth: Float,
+    columns: Int,
+    tileWidth: Float,
+    footprint: Footprint,
+    margin: Float,
+    labelBottom: Float = 0f,
+): HomeMetrics {
     val gap = ceil(footprint.side + margin)
-    val rowGap = ceil(max(footprint.top, footprint.bottom) + margin)
+    val below = max(footprint.bottom, labelBottom)
+    val rowGap = ceil(max(footprint.top, below) + margin)
     val sidePadding = (screenWidth - columns * tileWidth - (columns - 1) * gap) / 2
     val metrics = HomeMetrics(
         tileWidth = tileWidth,
@@ -107,7 +117,7 @@ fun homeMetrics(screenWidth: Float, columns: Int, tileWidth: Float, footprint: F
         sidePadding = sidePadding,
         dockPadSide = gap,
         dockPadTop = ceil(footprint.top + margin),
-        dockPadBottom = ceil(footprint.bottom + margin),
+        dockPadBottom = ceil(below + margin),
     )
     require(metrics.dockInset >= 0f) { "Dock slab does not fit $screenWidth dp: $metrics" }
     return metrics

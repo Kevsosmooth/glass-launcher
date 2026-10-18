@@ -1,11 +1,13 @@
 package com.kevin.glasslauncher.settings.backup
 
 import com.kevin.glasslauncher.data.AppOrder
+import com.kevin.glasslauncher.data.City
 import com.kevin.glasslauncher.data.Look
 import com.kevin.glasslauncher.data.MAX_DOCK_SIZE
 import com.kevin.glasslauncher.data.MIN_DOCK_SIZE
 import com.kevin.glasslauncher.data.PrefsPatch
 import com.kevin.glasslauncher.data.Rotation
+import com.kevin.glasslauncher.data.TempUnit
 import com.kevin.glasslauncher.glass.WallpaperCatalog
 import org.json.JSONArray
 import org.json.JSONException
@@ -17,7 +19,7 @@ const val BACKUP_VERSION = 1
 const val MAX_BACKUP_BYTES = 64 * 1024
 const val MAX_BACKUP_LIST = 500
 
-// A real backup has four brackets (file, settings, dock, hidden). org.json parses recursively, so
+// A real backup has five brackets (file, settings, dock, hidden, weather city). org.json parses recursively, so
 // a file of nothing but "[[[[" could overflow the stack; capping every bracket bounds the depth.
 private const val MAX_BRACKETS = 64
 private const val MAX_NAME_LENGTH = 255
@@ -40,6 +42,13 @@ private object Key {
     const val HIDDEN = "hidden"
     const val HUD = "hud"
     const val APP_ORDER = "appOrder"
+    const val WEATHER = "weather"
+    const val TEMP_UNIT = "temperatureUnit"
+    const val WEATHER_CITY = "weatherCity"
+    const val WEATHER_DEVICE_LOCATION = "weatherDeviceLocation"
+    const val CITY_NAME = "name"
+    const val CITY_LAT = "latitude"
+    const val CITY_LON = "longitude"
 }
 
 /** Why a file was not imported at all. */
@@ -69,6 +78,10 @@ fun encodeBackup(patch: PrefsPatch): String {
     patch.hidden?.let { settings.put(Key.HIDDEN, JSONArray(it.sorted())) }
     patch.hud?.let { settings.put(Key.HUD, it) }
     patch.appOrder?.let { settings.put(Key.APP_ORDER, it.name) }
+    patch.weatherOn?.let { settings.put(Key.WEATHER, it) }
+    patch.tempUnit?.let { settings.put(Key.TEMP_UNIT, it.name) }
+    patch.weatherCity?.let { settings.put(Key.WEATHER_CITY, cityJson(it)) }
+    patch.weatherUseDeviceLocation?.let { settings.put(Key.WEATHER_DEVICE_LOCATION, it) }
     return JSONObject()
         .put(Key.FORMAT, BACKUP_FORMAT)
         .put(Key.VERSION, BACKUP_VERSION)
@@ -107,6 +120,10 @@ fun decodeBackup(bytes: ByteArray): DecodedBackup {
         hidden = reader.read(Key.HIDDEN) { appKeys(it)?.toSet() },
         hud = reader.read(Key.HUD) { it as? Boolean },
         appOrder = reader.read(Key.APP_ORDER) { enumByName(it, AppOrder.entries) },
+        weatherOn = reader.read(Key.WEATHER) { it as? Boolean },
+        tempUnit = reader.read(Key.TEMP_UNIT) { enumByName(it, TempUnit.entries) },
+        weatherCity = reader.read(Key.WEATHER_CITY, ::city),
+        weatherUseDeviceLocation = reader.read(Key.WEATHER_DEVICE_LOCATION) { it as? Boolean },
     )
     if (patch.size == 0) return DecodedBackup.Rejected(BackupError.NoSettings)
     return DecodedBackup.Valid(patch, reader.skipped)
@@ -134,6 +151,20 @@ private class FieldReader(private val json: JSONObject) {
 }
 
 private fun <E : Enum<E>> enumByName(value: Any, entries: List<E>): E? = entries.firstOrNull { it.name == value }
+
+private fun cityJson(city: City): JSONObject = JSONObject()
+    .put(Key.CITY_NAME, city.name)
+    .put(Key.CITY_LAT, city.latitude)
+    .put(Key.CITY_LON, city.longitude)
+
+/** A weather city with a non-blank name and coordinates on the globe, or null. */
+private fun city(value: Any): City? {
+    val json = value as? JSONObject ?: return null
+    val name = (json.opt(Key.CITY_NAME) as? String)?.takeIf { it.isNotBlank() && it.length <= MAX_NAME_LENGTH } ?: return null
+    val lat = (json.opt(Key.CITY_LAT) as? Number)?.toDouble()?.takeIf { it in -90.0..90.0 } ?: return null
+    val lon = (json.opt(Key.CITY_LON) as? Number)?.toDouble()?.takeIf { it in -180.0..180.0 } ?: return null
+    return City(name, lat, lon)
+}
 
 /** Every entry of a JSON array of app keys, or null if it is too long or any entry is not one. */
 private fun appKeys(value: Any): List<String>? {

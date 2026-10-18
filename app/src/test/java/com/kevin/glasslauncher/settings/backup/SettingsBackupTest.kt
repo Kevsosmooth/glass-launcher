@@ -1,10 +1,12 @@
 package com.kevin.glasslauncher.settings.backup
 
 import com.kevin.glasslauncher.data.AppOrder
+import com.kevin.glasslauncher.data.City
 import com.kevin.glasslauncher.data.Look
 import com.kevin.glasslauncher.data.Prefs
 import com.kevin.glasslauncher.data.PrefsPatch
 import com.kevin.glasslauncher.data.Rotation
+import com.kevin.glasslauncher.data.TempUnit
 import com.kevin.glasslauncher.data.toPatch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -31,6 +33,10 @@ class SettingsBackupTest {
         topShelf = false,
         appBackdrop = false,
         appOrder = AppOrder.Alphabetical,
+        weatherOn = false,
+        tempUnit = TempUnit.Celsius,
+        weatherCity = City("Paris, Ile-de-France, France", 48.85, 2.35),
+        weatherUseDeviceLocation = true,
     )
 
     private fun decode(json: String) = decodeBackup(json.toByteArray())
@@ -41,7 +47,7 @@ class SettingsBackupTest {
     @Test
     fun roundTripKeepsEverySetting() {
         val patch = customised.toPatch()
-        assertEquals(11, patch.size)
+        assertEquals(15, patch.size)
         assertEquals(DecodedBackup.Valid(patch, skipped = 0), decodeBackup(encodeBackup(patch).toByteArray()))
     }
 
@@ -118,6 +124,24 @@ class SettingsBackupTest {
         val tooMany = (0..MAX_BACKUP_LIST).joinToString(",") { "\"com.app$it.x/com.app$it.x.Main\"" }
         val result = decode(file("\"dockSize\": 5.0, \"hidden\": [$tooMany], \"appBackdrop\": true"))
         assertEquals(DecodedBackup.Valid(PrefsPatch(appBackdrop = true), skipped = 2), result)
+    }
+
+    @Test
+    fun weatherCityNeedsANameAndCoordinatesOnTheGlobe() {
+        val ok = decode(file("\"weatherCity\": {\"name\": \"Oslo, Norway\", \"latitude\": 59.91, \"longitude\": 10}"))
+        assertEquals(DecodedBackup.Valid(PrefsPatch(weatherCity = City("Oslo, Norway", 59.91, 10.0)), 0), ok)
+        val bad = decode(
+            file(
+                """
+                "weatherCity": {"name": "", "latitude": 1, "longitude": 1},
+                "temperatureUnit": "Kelvin",
+                "weather": true
+                """,
+            ),
+        )
+        assertEquals(DecodedBackup.Valid(PrefsPatch(weatherOn = true), skipped = 2), bad)
+        val offGlobe = decode(file("\"weatherCity\": {\"name\": \"X\", \"latitude\": 91, \"longitude\": 1}, \"weather\": false"))
+        assertEquals(DecodedBackup.Valid(PrefsPatch(weatherOn = false), skipped = 1), offGlobe)
     }
 
     @Test

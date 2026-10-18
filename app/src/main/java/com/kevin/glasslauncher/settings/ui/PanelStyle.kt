@@ -17,7 +17,6 @@ object PanelStyle {
     val Text = Color.White
     val SecondaryText = Color(0xCCFFFFFF)
     val SwitchOn = Color(0xFF34C759)
-    val SwitchOff = Color(0x66FFFFFF)
     val SwitchOffFocused = Color(0x40000000)
     val CodeSurface = Color(0xFF1C1F26)
 

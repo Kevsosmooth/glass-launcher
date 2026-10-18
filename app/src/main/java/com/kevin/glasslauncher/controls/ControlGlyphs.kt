@@ -7,6 +7,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -101,5 +102,57 @@ object ControlGlyphs {
                 drawRoundRect(color, Offset(col * (cell + gap), row * (cell + gap)), Size(cell, cell), CornerRadius(cell * 0.25f))
             }
         }
+    }
+
+    /** Power symbol: a ring open at the top with a bar through the gap. */
+    val Power: Glyph = { color ->
+        val w = size.minDimension * 0.1f
+        val r = size.minDimension / 2 - w / 2
+        drawArc(color, -60f, 300f, false, center - Offset(r, r), Size(2 * r, 2 * r), style = Stroke(w, cap = StrokeCap.Round))
+        drawLine(color, center - Offset(0f, r * 1.05f), center - Offset(0f, r * 0.2f), w, StrokeCap.Round)
+    }
+
+    /** Two switches, knob left then right: the Quick Controls button (tvOS Control Center glyph). */
+    val Toggles: Glyph = { color ->
+        val w = size.minDimension * 0.09f
+        val track = Size(size.width * 0.9f, size.height * 0.36f)
+        val left = (size.width - track.width) / 2
+        listOf(size.height * 0.08f, size.height * 0.56f).forEachIndexed { i, top ->
+            drawRoundRect(color, Offset(left, top), track, CornerRadius(track.height / 2), style = Stroke(w))
+            val knob = if (i == 0) left + track.height / 2 else left + track.width - track.height / 2
+            drawCircle(color, track.height * 0.42f, Offset(knob, top + track.height / 2))
+        }
+    }
+
+    /** A framed photo: hills and a sun. */
+    val Photo: Glyph = { color ->
+        val w = size.minDimension * 0.09f
+        val frame = Size(size.width * 0.9f, size.height * 0.72f)
+        val topLeft = Offset(size.width * 0.05f, size.height * 0.14f)
+        drawRoundRect(color, topLeft, frame, CornerRadius(w * 1.5f), style = Stroke(w))
+        val bottom = topLeft.y + frame.height
+        val hills = Path().apply {
+            moveTo(topLeft.x, bottom)
+            lineTo(size.width * 0.38f, size.height * 0.46f)
+            lineTo(size.width * 0.6f, size.height * 0.66f)
+            lineTo(size.width * 0.72f, size.height * 0.56f)
+            lineTo(topLeft.x + frame.width, bottom)
+            close()
+        }
+        drawPath(hills, color)
+        drawCircle(color, size.minDimension * 0.08f, Offset(size.width * 0.7f, size.height * 0.34f))
+    }
+
+    val Bluetooth: Glyph = { color ->
+        val w = size.minDimension * 0.09f
+        val rune = Path().apply {
+            moveTo(size.width * 0.28f, size.height * 0.3f)
+            lineTo(size.width * 0.72f, size.height * 0.7f)
+            lineTo(size.width * 0.5f, size.height * 0.9f)
+            lineTo(size.width * 0.5f, size.height * 0.1f)
+            lineTo(size.width * 0.72f, size.height * 0.3f)
+            lineTo(size.width * 0.28f, size.height * 0.7f)
+        }
+        drawPath(rune, color, style = Stroke(w, cap = StrokeCap.Round, join = StrokeJoin.Round))
     }
 }

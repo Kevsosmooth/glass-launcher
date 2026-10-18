@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the weather next to the clock and its settings. -->
+<resources>
+    <!-- Status corner: spoken description, e.g. "Partly cloudy, 72°" -->
+    <string name="weather_now_description">%1$s, %2$s</string>
+    <string name="weather_clear">Clear</string>
+    <string name="weather_partly_cloudy">Partly cloudy</string>
+    <string name="weather_cloudy">Cloudy</string>
+    <string name="weather_fog">Fog</string>
+    <string name="weather_rain">Rain</string>
+    <string name="weather_snow">Snow</string>
+    <string name="weather_thunder">Thunderstorms</string>
+
+    <!-- Settings: main page rows -->
+    <string name="weather_toggle">Weather</string>
+    <string name="weather_temperature">Temperature</string>
+    <string name="weather_unit_f">°F</string>
+    <string name="weather_unit_c">°C</string>
+    <string name="weather_location">Weather location</string>
+    <string name="weather_location_auto">Automatic</string>
+    <string name="weather_location_auto_named">Automatic (%1$s)</string>
+
+    <!-- Settings: Weather location page -->
+    <string name="weather_location_from_wifi">From your Wi-Fi location</string>
+    <string name="weather_location_from_internet">%1$s, from your internet address</string>
+    <string name="weather_location_from_internet_unnamed">From your internet address</string>
+    <string name="weather_location_wrong">Location looks wrong (VPN?). Pick your city.</string>
+    <string name="weather_location_unknown">Not found yet</string>
+    <string name="weather_location_current">Current</string>
+    <string name="weather_device_location">Use this TV\'s location</string>
+    <string name="weather_device_location_note">More accurate and works with a VPN. Your location is rounded to about 1 km and sent only to Open-Meteo for the forecast.</string>
+    <string name="weather_search_label">City</string>
+    <string name="weather_search_hint">Type a city name</string>
+    <string name="weather_search_none">No places found</string>
+    <string name="weather_search_failed">Couldn\'t search. Check the connection.</string>
+
+    <!-- Weather card (opens from the weather next to the clock) -->
+    <string name="weather_card_description">Weather details</string>
+    <string name="weather_your_location">Your location</string>
+    <string name="weather_loading">Weather is loading</string>
+    <string name="weather_unavailable">Weather unavailable</string>
+    <string name="weather_feels_like">Feels like %1$s</string>
+    <string name="weather_high">H %1$s</string>
+    <string name="weather_low">L %1$s</string>
+    <string name="weather_humidity">Humidity %1$d%%</string>
+    <string name="weather_wind_mph">Wind %1$d mph</string>
+    <string name="weather_wind_kmh">Wind %1$d km/h</string>
+    <string name="weather_next_hours">Next 12 hours</string>
+    <string name="weather_next_days">Next 5 days</string>
+    <string name="weather_today">Today</string>
+    <string name="weather_dry">No rain expected in the next 12 hours</string>
+    <string name="weather_rain_until">Rain until around %1$s</string>
+    <string name="weather_rain_all">Rain for the next 12 hours</string>
+    <string name="weather_rain_starts">Rain starting around %1$s</string>
+    <string name="weather_rain_starts_stops">Rain starting around %1$s, stopping around %2$s</string>
+    <string name="weather_snow_until">Snow until around %1$s</string>
+    <string name="weather_snow_all">Snow for the next 12 hours</string>
+    <string name="weather_snow_starts">Snow starting around %1$s</string>
+    <string name="weather_snow_starts_stops">Snow starting around %1$s, stopping around %2$s</string>
+</resources>

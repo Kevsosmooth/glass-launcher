@@ -2,7 +2,9 @@ package com.kevin.glasslauncher.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -31,6 +33,12 @@ private object Keys {
     val sleepAt = longPreferencesKey("sleep_at")
     val appOrder = stringPreferencesKey("app_order")
     val homeSetupSeen = booleanPreferencesKey("home_setup_seen")
+    val weatherOn = booleanPreferencesKey("weather_on")
+    val tempUnit = stringPreferencesKey("temp_unit")
+    val cityName = stringPreferencesKey("weather_city_name")
+    val cityLat = doublePreferencesKey("weather_city_lat")
+    val cityLon = doublePreferencesKey("weather_city_lon")
+    val weatherDeviceLocation = booleanPreferencesKey("weather_device_location")
 }
 
 /** DataStore-backed [Prefs]. Every setter is a single atomic edit. */
@@ -53,6 +61,10 @@ class LauncherPrefs(private val context: Context) {
             sleepAtMillis = p[Keys.sleepAt] ?: d.sleepAtMillis,
             appOrder = AppOrder.entries.firstOrNull { it.name == p[Keys.appOrder] } ?: d.appOrder,
             homeSetupSeen = p[Keys.homeSetupSeen] ?: d.homeSetupSeen,
+            weatherOn = p[Keys.weatherOn] ?: d.weatherOn,
+            tempUnit = TempUnit.entries.firstOrNull { it.name == p[Keys.tempUnit] } ?: d.tempUnit,
+            weatherCity = readCity(p),
+            weatherUseDeviceLocation = p[Keys.weatherDeviceLocation] ?: d.weatherUseDeviceLocation,
         )
     }.distinctUntilChanged()
 
@@ -76,6 +88,10 @@ class LauncherPrefs(private val context: Context) {
     suspend fun setSleepAt(millis: Long) = edit { it[Keys.sleepAt] = millis }
     suspend fun setAppOrder(order: AppOrder) = edit { it[Keys.appOrder] = order.name }
     suspend fun setHomeSetupSeen() = edit { it[Keys.homeSetupSeen] = true }
+    suspend fun setWeatherOn(on: Boolean) = edit { it[Keys.weatherOn] = on }
+    suspend fun setTempUnit(unit: TempUnit) = edit { it[Keys.tempUnit] = unit.name }
+    suspend fun setWeatherCity(city: City?) = edit { writeCity(it, city) }
+    suspend fun setWeatherUseDeviceLocation(on: Boolean) = edit { it[Keys.weatherDeviceLocation] = on }
 
     /** Writes every non-null field of [patch] in one edit (one recomposition, no half-applied state). */
     suspend fun restore(patch: PrefsPatch) = edit { p ->
@@ -91,10 +107,34 @@ class LauncherPrefs(private val context: Context) {
         patch.hidden?.let { p[Keys.hidden] = it }
         patch.hud?.let { p[Keys.hud] = it }
         patch.appOrder?.let { p[Keys.appOrder] = it.name }
+        patch.weatherOn?.let { p[Keys.weatherOn] = it }
+        patch.tempUnit?.let { p[Keys.tempUnit] = it.name }
+        patch.weatherCity?.let { writeCity(p, it) }
+        patch.weatherUseDeviceLocation?.let { p[Keys.weatherDeviceLocation] = it }
     }
 
     suspend fun recordLaunch(key: String) = edit {
         it[Keys.recents] = encodeList(pushRecent(it[Keys.recents]?.let(::decodeList).orEmpty(), key))
+    }
+
+    private fun readCity(p: Preferences): City? {
+        val name = p[Keys.cityName] ?: return null
+        val lat = p[Keys.cityLat] ?: return null
+        val lon = p[Keys.cityLon] ?: return null
+        return City(name, lat, lon)
+    }
+
+    /** Null removes the city (automatic location); all three keys change together. */
+    private fun writeCity(p: MutablePreferences, city: City?) {
+        if (city == null) {
+            p.remove(Keys.cityName)
+            p.remove(Keys.cityLat)
+            p.remove(Keys.cityLon)
+        } else {
+            p[Keys.cityName] = city.name
+            p[Keys.cityLat] = city.latitude
+            p[Keys.cityLon] = city.longitude
+        }
     }
 
     private suspend fun edit(block: (MutablePreferences) -> Unit) {

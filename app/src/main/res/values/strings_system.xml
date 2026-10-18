@@ -24,7 +24,7 @@
     <string name="system_wifi_networks">Networks</string>
     <string name="system_wifi_searching">Looking for networks…</string>
     <string name="system_wifi_allow">Show network names</string>
-    <string name="system_wifi_allow_hint">Android only shares Wi-Fi names with apps that have location access. Glass never uses your location.</string>
+    <string name="system_wifi_allow_hint">Android only shares Wi-Fi names with apps that have location access. Weather uses it only if you turn on Use this TV\'s location.</string>
     <string name="system_wifi_location_off">Turn on Location to see networks</string>
     <string name="system_wifi_secured">Secured</string>
     <string name="system_wifi_open">Open</string>

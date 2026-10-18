@@ -11,8 +11,9 @@ import kotlinx.coroutines.delay
 fun clockText(time: LocalTime, use24h: Boolean): String = if (use24h) {
     "%02d:%02d".format(time.hour, time.minute)
 } else {
+    // tvOS style: "9:41 AM".
     val h = time.hour % 12
-    "%d:%02d".format(if (h == 0) 12 else h, time.minute)
+    "%d:%02d %s".format(if (h == 0) 12 else h, time.minute, if (time.hour < 12) "AM" else "PM")
 }
 
 fun millisToNextMinute(nowMillis: Long): Long = 60_000L - nowMillis % 60_000L

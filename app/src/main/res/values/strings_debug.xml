@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stats overlay (Settings > Stats overlay): live frame, memory, CPU and network numbers. -->
+<resources>
+    <string name="stats_frames">%1$d fps, jank %2$.1f%%</string>
+    <string name="stats_frames_waiting">-- fps, waiting for frames</string>
+    <string name="stats_memory">pss %1$d MB, heap %2$d/%3$d MB</string>
+    <string name="stats_ram">ram %1$d/%2$d MB free</string>
+    <string name="stats_ram_low">LOW</string>
+    <string name="stats_cpu">cpu %1$s</string>
+    <string name="stats_net_app">glass rx %1$s tx %2$s KB/s</string>
+    <string name="stats_net_device">device rx %1$s tx %2$s KB/s</string>
+    <string name="stats_na">n/a</string>
+    <string name="stats_device">Android %1$s, %2$s</string>
+    <string name="stats_display">%1$dx%2$d @ %3$s Hz</string>
+    <string name="stats_version">Glass %1$s</string>
+    <string name="stats_requests">Recent requests</string>
+    <string name="stats_no_requests">No requests yet</string>
+</resources>

@@ -69,8 +69,9 @@ Gemini and it walks you through each step.
 | --- | --- |
 | ![Downloader with code 9798602](docs/images/install/enter-code.jpg) | ![Android's install prompt](docs/images/install/install-prompt.jpg) |
 
-The code always points at the newest release, so to update, run the same steps again. Your
-settings are kept. Without the code, the address is
+To update, use the Update card in Quick Controls when a new version is out, or Settings > About >
+Check for updates (versions before 0.3.0: run the same steps again; the code always points at the
+newest release). Your settings are kept. Without the code, the address is
 `https://github.com/Kevsosmooth/glass-launcher/releases/latest/download/glass-launcher.apk`.
 
 ## Make it your Home screen
@@ -158,7 +159,21 @@ Open Launcher Settings from Quick Controls. Look (Glass or Solid), wallpaper and
 rotation, the focused-app backdrop, the top shelf, dock size, hidden apps and the 12/24-hour clock.
 The Device section lists Wi-Fi, Bluetooth, Sound, Display, Storage and About this TV with their
 current values, plus Android Settings. Wi-Fi network names need the location permission (Android's
-rule; Glass never reads your location) and Location turned on.
+rule) and Location turned on.
+
+## Privacy and network
+
+Glass talks to three services, and nothing else:
+
+- **GitHub**, once a day, to check for a new Glass release (and to download it when you choose
+  Update).
+- **Open-Meteo**, for the weather next to the clock. It gets a location rounded to about 1 km.
+- **get.geojs.io**, to guess your city from your internet address when you have not picked one.
+
+The weather location comes from the city you pick in Settings, or a guess from your internet
+address. Glass reads the TV's own location only if you turn on "Use this TV's location" under
+Weather location. Turn weather off and Glass makes no weather requests at all. No accounts,
+analytics or ads.
 
 ## Performance budgets
 

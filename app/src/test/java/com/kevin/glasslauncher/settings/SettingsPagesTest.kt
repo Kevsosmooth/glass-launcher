@@ -33,7 +33,7 @@ class SettingsPagesTest {
         val selected = mutableListOf<SettingId>()
         rule.setContent {
             GlassPanel("panel") {
-                MainSettingsPage(settingsSections(Prefs(), false, false, "1.0"), null, 0) { selected += it }
+                MainSettingsPage(settingsSections(Prefs(), false, "1.0"), null, 0) { selected += it }
             }
         }
         rule.onNode(hasText("Look", substring = true)).assertIsFocused()
@@ -46,7 +46,7 @@ class SettingsPagesTest {
     fun mainPageFocusesTheRowItCameBackTo() {
         rule.setContent {
             GlassPanel("panel") {
-                MainSettingsPage(settingsSections(Prefs(), false, false, "1.0"), SettingId.MakeDefault, 0) {}
+                MainSettingsPage(settingsSections(Prefs(), false, "1.0"), SettingId.MakeDefault, 0) {}
             }
         }
         rule.onNode(hasText("Make Glass your home screen", substring = true)).assertIsFocused()

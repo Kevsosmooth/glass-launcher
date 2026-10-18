@@ -7,6 +7,8 @@ import com.kevin.glasslauncher.apps.BannerCache
 import com.kevin.glasslauncher.apps.PackageChangeReceiver
 import com.kevin.glasslauncher.data.LauncherPrefs
 import com.kevin.glasslauncher.glass.WallpaperRepository
+import com.kevin.glasslauncher.update.UpdateController
+import com.kevin.glasslauncher.weather.WeatherRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -18,6 +20,8 @@ class AppContainer(app: Application) {
     val banners = BannerCache(app)
     val prefs = LauncherPrefs(app)
     val wallpaper = WallpaperRepository(app, scope, prefs.prefs)
+    val weather = WeatherRepository.create(app, scope, prefs.prefs)
+    val updates = UpdateController(app, scope)
 }
 
 class LauncherApp : Application() {

@@ -1,5 +1,6 @@
 package com.kevin.glasslauncher.home
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -8,11 +9,14 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -27,7 +31,11 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +50,13 @@ private val Placeholder = Color(0x33FFFFFF)
 private val LabelStyle = TextStyle(
     color = Color.White,
     fontSize = 11.sp,
+    shadow = Shadow(Color(0x99000000), Offset(0f, 1f), 4f),
+)
+private val NameStyle = TextStyle(
+    color = Color.White,
+    fontSize = 12.sp,
+    lineHeight = HomeLayout.LABEL_LINE_DP.sp,
+    textAlign = TextAlign.Center,
     shadow = Shadow(Color(0x99000000), Offset(0f, 1f), 4f),
 )
 
@@ -81,7 +96,11 @@ fun AppTile(app: AppEntry, banners: BannerCache, tracker: DirectionTracker, onCl
     TileFrame(app, art, tracker, onClick, onLongClick = null, modifier = modifier.aspectRatio(16f / 9f))
 }
 
-/** 16:9 art (banner, or icon on a tint with the label) with the focus lift. */
+/**
+ * 16:9 art (banner, or icon on a tint with the label) with the focus lift. While focused the
+ * name fades in under the tile (tvOS); it is drawn outside the focus layer, which clips, and takes
+ * no layout space: [HomeLayout] reserves room for it in the row and dock gaps.
+ */
 @Composable
 private fun TileFrame(
     app: AppEntry,
@@ -94,8 +113,22 @@ private fun TileFrame(
     val picture by produceState(art.peek(app), app.key) {
         if (value == null) value = art.load(app)
     }
+    var focused by remember { mutableStateOf(false) }
+    val shown by animateFloatAsState(if (focused) 1f else 0f, label = "name")
+    val names = rememberTextMeasurer()
     Box(
         modifier
+            .onFocusChanged { focused = it.isFocused }
+            .drawWithContent {
+                drawContent()
+                if (shown > 0f) {
+                    val name = names.measure(
+                        app.label, NameStyle, overflow = TextOverflow.Ellipsis, maxLines = 1,
+                        constraints = Constraints.fixedWidth(size.width.roundToInt()),
+                    )
+                    drawText(name, topLeft = Offset(0f, size.height + HomeLayout.LABEL_TOP_DP.dp.toPx()), alpha = shown)
+                }
+            }
             // One merged node outside the focus layer, so tests and layout checks see unscaled bounds.
             .semantics(mergeDescendants = true) {}
             .focusMotion(tracker, HomeLayout.TileShape)

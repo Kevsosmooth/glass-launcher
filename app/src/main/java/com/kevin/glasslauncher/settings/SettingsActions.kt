@@ -15,6 +15,10 @@ suspend fun PrefChange.applyTo(prefs: LauncherPrefs) {
         is PrefChange.SetAppOrder -> prefs.setAppOrder(order)
         is PrefChange.SetWallpaper -> prefs.setWallpaper(id)
         is PrefChange.SetHidden -> prefs.setHidden(keys)
+        is PrefChange.SetWeatherOn -> prefs.setWeatherOn(on)
+        is PrefChange.SetTempUnit -> prefs.setTempUnit(unit)
+        is PrefChange.SetWeatherCity -> prefs.setWeatherCity(city)
+        is PrefChange.SetWeatherDeviceLocation -> prefs.setWeatherUseDeviceLocation(on)
         PrefChange.ResetDock -> prefs.resetFavorites()
     }
 }

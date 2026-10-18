@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings owned by lane `update`: the update card and the Settings "Check for updates" row. -->
+<resources>
+    <!-- Update card -->
+    <string name="update_available_title">Update available: %1$s</string>
+    <string name="update_whats_new">What\'s new</string>
+    <string name="update_no_notes">No release notes.</string>
+    <string name="update_button">Update</string>
+    <string name="update_later">Later</string>
+    <string name="update_downloading">Downloading %1$d%%</string>
+    <string name="update_verifying">Verifying</string>
+    <string name="update_installing">Installing</string>
+    <string name="update_allow">Allow installs</string>
+    <string name="update_retry">Try again</string>
+    <string name="update_needs_permission">Android needs your OK first: turn on Glass under Install unknown apps, then come back.</string>
+    <string name="update_no_permission_screen">This TV has no Install unknown apps screen, so Glass cannot update itself. Install the new version by hand.</string>
+
+    <!-- Settings > About -->
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_up_to_date">Up to date</string>
+    <string name="update_new_version">Version %1$s available</string>
+
+    <!-- Why an update did not finish -->
+    <string name="update_failed_network">Could not reach GitHub. Check the connection.</string>
+    <string name="update_failed_server">GitHub did not answer. Try again later.</string>
+    <string name="update_failed_bad_release">The latest release has no Glass app to install.</string>
+    <string name="update_failed_blocked">The download went somewhere other than GitHub, so Glass stopped.</string>
+    <string name="update_failed_too_large">The download is too large.</string>
+    <string name="update_failed_corrupt">The download was damaged. Try again.</string>
+    <string name="update_failed_not_trusted">The download is not signed like this Glass, so Glass will not install it.</string>
+    <string name="update_failed_not_newer">The download is not newer than this Glass.</string>
+    <string name="update_failed_cancelled">Update cancelled.</string>
+    <string name="update_failed_storage">Not enough space to install the update.</string>
+    <string name="update_failed_install">Android could not install the update.</string>
+</resources>
