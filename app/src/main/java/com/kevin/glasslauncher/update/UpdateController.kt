@@ -58,6 +58,10 @@ class UpdateController(context: Context, private val scope: CoroutineScope, priv
     @Volatile
     private var pending: PendingInstall? = null
 
+    // Between onStart and onStop: a screen started now is not blocked by Android.
+    @Volatile
+    private var inFront = false
+
     val state: StateFlow<UpdateState> = mutableState.asStateFlow()
 
     // A file left by an interrupted update is never reused; the saved release brings the card back.
@@ -68,15 +72,22 @@ class UpdateController(context: Context, private val scope: CoroutineScope, priv
 
     /**
      * Glass came to the front (onStart). Asks GitHub at most once per [CHECK_INTERVAL_MS], quietly (no
-     * Checking, no Failed). Also resumes an update the user just allowed, and brings back Android's
-     * install confirmation (or gives up on it after [INSTALL_TIMEOUT_MS]) while Installing.
+     * Checking, no Failed). Also resumes an update the user just allowed, and while Installing brings back
+     * Android's install confirmation if it was started in the background (or gives up after
+     * [INSTALL_TIMEOUT_MS]).
      */
     fun checkIfDue() {
+        inFront = true
         when (val current = state.value) {
             is UpdateState.Installing -> resumeInstall(current.release)
             is UpdateState.NeedsPermission -> if (canInstall()) startUpdate()
             else -> launchExclusive { if (isCheckDue(store.lastCheck, env.now())) checkGitHub(quiet = true) }
         }
+    }
+
+    /** Glass left the screen (onStop). */
+    fun onBackground() {
+        inFront = false
     }
 
     /** Asks GitHub now (Settings > Check for updates), showing Checking and any failure. */
@@ -137,14 +148,17 @@ class UpdateController(context: Context, private val scope: CoroutineScope, priv
             giveUpInstall(release)
             return
         }
-        pending = (pending ?: PendingInstall(env.now())).copy(confirm = safe)
+        pending = (pending ?: PendingInstall(env.now())).copy(confirm = safe, shown = inFront)
         if (!app.tryStart(safe)) giveUpInstall(release)
     }
 
     private fun resumeInstall(release: ReleaseInfo) {
         when (val resume = installResume(pending, env.now())) {
             InstallResume.Wait -> Unit
-            is InstallResume.Confirm -> if (!app.tryStart(resume.intent)) giveUpInstall(release)
+            is InstallResume.Confirm -> {
+                pending = pending?.copy(shown = true)
+                if (!app.tryStart(resume.intent)) giveUpInstall(release)
+            }
             InstallResume.GiveUp -> giveUpInstall(release)
         }
     }

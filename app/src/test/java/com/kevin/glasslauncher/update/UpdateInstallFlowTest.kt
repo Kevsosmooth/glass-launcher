@@ -65,7 +65,7 @@ class UpdateInstallFlowTest {
     }
 
     @Test
-    fun returningToGlassShowsTheConfirmationAgain() {
+    fun returningToGlassShowsAConfirmationStartedInTheBackgroundOnce() {
         registerConfirmScreen(app, system = true)
         val updates = installing()
         updates.onConfirmNeeded(confirmIntent())
@@ -75,6 +75,29 @@ class UpdateInstallFlowTest {
         updates.checkIfDue()
         assertEquals(installerScreen, shadowOf(app).nextStartedActivity?.component)
         assertTrue(updates.state.value is UpdateState.Installing)
+
+        updates.onBackground()
+        updates.checkIfDue()
+        assertNull(shadowOf(app).nextStartedActivity)
+    }
+
+    @Test
+    fun aConfirmationShownWhileGlassWasInFrontIsNotShownAgain() {
+        registerConfirmScreen(app, system = true)
+        val updates = installing()
+        updates.checkIfDue()
+        updates.onConfirmNeeded(confirmIntent())
+        assertEquals(installerScreen, shadowOf(app).nextStartedActivity?.component)
+
+        // Fire OS closes the screen on Install, so Glass is back in front while Android installs.
+        updates.onBackground()
+        now += 5_000
+        updates.checkIfDue()
+        assertNull(shadowOf(app).nextStartedActivity)
+        assertTrue(updates.state.value is UpdateState.Installing)
+
+        updates.onInstallResult(PackageInstaller.STATUS_SUCCESS)
+        assertTrue(updates.state.value is UpdateState.UpToDate)
     }
 
     @Test

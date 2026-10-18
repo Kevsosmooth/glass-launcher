@@ -13,6 +13,7 @@
     <string name="update_allow">Allow installs</string>
     <string name="update_retry">Try again</string>
     <string name="update_needs_permission">Android needs your OK first: turn on Glass under Install unknown apps, then come back.</string>
+    <string name="update_needs_permission_fire">Fire TV needs your OK first: select Install unknown apps, turn on Glass, then press Back. Glass not in the list? Restart the Fire TV and try again.</string>
     <string name="update_no_permission_screen">This TV has no Install unknown apps screen, so Glass cannot update itself. Install the new version by hand.</string>
 
     <!-- Settings > About -->

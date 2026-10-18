@@ -63,6 +63,11 @@ class MainActivity : ComponentActivity() {
         container.updates.checkIfDue()
     }
 
+    override fun onStop() {
+        container.updates.onBackground()
+        super.onStop()
+    }
+
     private fun handleExtras(intent: Intent) {
         DebugTools.applyLaunchExtras(intent, container)
         // Debug only: in a release build another app could pop a panel up over playback.

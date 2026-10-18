@@ -32,6 +32,13 @@ class PendingInstallTest {
     }
 
     @Test
+    fun aConfirmationTheUserHasSeenIsNotShownAgain() {
+        val pending = PendingInstall(start, confirm, shown = true)
+        assertEquals(InstallResume.Wait, installResume(pending, start + 60_000))
+        assertEquals(InstallResume.GiveUp, installResume(pending, start + INSTALL_TIMEOUT_MS + 1))
+    }
+
+    @Test
     fun withoutAConfirmationYetItWaits() {
         assertEquals(InstallResume.Wait, installResume(PendingInstall(start), start + 60_000))
         assertEquals(InstallResume.GiveUp, installResume(PendingInstall(start), start + INSTALL_TIMEOUT_MS + 1))

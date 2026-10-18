@@ -1,10 +1,25 @@
 package com.kevin.glasslauncher.update
 
+import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.kevin.glasslauncher.R
 import kotlin.math.roundToInt
+
+private const val FIRE_TV_FEATURE = "amazon.hardware.fire_tv"
+
+/**
+ * How to allow installs on this TV. Fire OS opens Developer options instead of Glass's own switch,
+ * and its list can miss an app that gained the permission while Settings was running.
+ */
+@StringRes
+fun permissionHintRes(context: Context): Int =
+    if (context.packageManager.hasSystemFeature(FIRE_TV_FEATURE)) {
+        R.string.update_needs_permission_fire
+    } else {
+        R.string.update_needs_permission
+    }
 
 /** The sentence shown for a failed check or update. */
 @get:StringRes

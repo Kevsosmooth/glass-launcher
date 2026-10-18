@@ -34,6 +34,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -85,7 +86,7 @@ fun UpdateCard(state: UpdateState, onUpdate: () -> Unit, onLater: () -> Unit, mo
 @Composable
 private fun statusMessage(state: UpdateState): String? = when (state) {
     is UpdateState.Failed -> stringResource(state.reason.messageRes)
-    is UpdateState.NeedsPermission -> stringResource(R.string.update_needs_permission)
+    is UpdateState.NeedsPermission -> stringResource(permissionHintRes(LocalContext.current))
     else -> null
 }
 
