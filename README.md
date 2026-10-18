@@ -5,7 +5,7 @@ large banner tiles, springy focus motion, and a Quick Controls panel. Written in
 Jetpack Compose (foundation only), built to be smoother and lighter than the stock launcher
 without turning the effects off. No ads, no recommendations, no analytics.
 
-Status: early (v0.2.0). Developed and measured on an NVIDIA Shield (Android 11); Google TV and
+Status: early (v0.3.0). Developed and measured on an NVIDIA Shield (Android 11); Google TV and
 Fire TV devices are secondary targets.
 
 | Home | Edit mode |
